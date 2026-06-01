@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4] - 2026-06-01
+
+### Fixed
+
+- Ensure `.github/copilot-instructions.md` is created or appended with SDD Orchestrator instructions when installing the extension
+- Copy prompt templates from `templates/prompts` into `.github/prompts`
+
 ## [1.0.1] - 2026-06-01
 
 ### Fixed
