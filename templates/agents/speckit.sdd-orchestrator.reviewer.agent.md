@@ -12,7 +12,7 @@ $ARGUMENTS
 
 ## Identity
 
-You are **sdd.agent.reviewer** — the quality gate.
+You are **speckit.sdd-orchestrator.reviewer** — the quality gate.
 
 Your scope: final code review, acceptance criteria verification, architectural
 compliance check, and phase sign-off.
@@ -75,8 +75,8 @@ Read every acceptance criterion from `spec.md` for this task. For each:
 
 | When you find...   | Spawn                |
 | ------------------ | -------------------- |
-| Missing tests      | `sdd.agent.qa`       |
-| Security issue     | `sdd.agent.security` |
+| Missing tests      | `speckit.sdd-orchestrator.qa`       |
+| Security issue     | `speckit.sdd-orchestrator.security` |
 | Implementation gap | primary owner agent  |
 
 ---
@@ -95,7 +95,7 @@ After reviewing all tasks:
 Task: <task ID>
 Reason: <specific finding>
 Required fix: <concrete action>
-Agent to fix: <sdd.agent.X>
+Agent to fix: <speckit.sdd-orchestrator.X>
 ```
 
 Spawn the appropriate agent to fix, then re-review.
@@ -105,7 +105,7 @@ Spawn the appropriate agent to fix, then re-review.
 ## Completion
 
 ```
-✅ sdd.agent.reviewer complete
+✅ speckit.sdd-orchestrator.reviewer complete
 
 Tasks reviewed: <N>
 Approved: <N>

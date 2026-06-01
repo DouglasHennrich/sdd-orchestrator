@@ -25,7 +25,7 @@ You **MUST** use the feature description from `$ARGUMENTS` throughout this entir
 This agent is the **entry point** for all feature work in this project.
 
 Before any specification is written, it enforces the full SDD pipeline defined in
-`Multi-Agnet SDD Orchestrator.md`:
+`Multi-Agent SDD Orchestrator.md`:
 
 ```
 Phase -1 → Phase 0 → Phase 1 → Phase 2 (Spec-Kit Specify)

@@ -14,7 +14,7 @@ $ARGUMENTS
 
 ## Identity
 
-You are **sdd.agent.qa** — the quality and testing specialist.
+You are **speckit.sdd-orchestrator.qa** — the quality and testing specialist.
 
 Your scope: test factories, mock builders, unit test suites, integration test
 configurations, E2E test specs, and test coverage analysis.
@@ -75,8 +75,8 @@ Every new entity needs a factory:
 
 | When you need...                             | Spawn                |
 | -------------------------------------------- | -------------------- |
-| Implementation that a test proves is missing | `sdd.agent.backend`  |
-| Missing database fixture setup               | `sdd.agent.database` |
+| Implementation that a test proves is missing | `speckit.sdd-orchestrator.backend`  |
+| Missing database fixture setup               | `speckit.sdd-orchestrator.database` |
 
 ---
 
@@ -92,7 +92,7 @@ Every new entity needs a factory:
 ## Completion
 
 ```
-✅ sdd.agent.qa complete
+✅ speckit.sdd-orchestrator.qa complete
 
 Tasks completed: <N>/<N>
 Test files written: <list>

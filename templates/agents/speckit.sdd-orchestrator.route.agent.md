@@ -36,12 +36,12 @@ Load the following:
 
 | Agent                | Handles                                                                   |
 | -------------------- | ------------------------------------------------------------------------- |
-| `sdd.agent.backend`  | NestJS modules, services, controllers, DTOs, use cases, application layer |
-| `sdd.agent.database` | Entities, TypeORM migrations, repositories, query optimization            |
-| `sdd.agent.infra`    | Docker Compose, CI/CD, environment config, deployment                     |
-| `sdd.agent.security` | Auth guards, JWT config, input validation, OWASP checklist                |
-| `sdd.agent.qa`       | Unit tests, integration tests, E2E tests, test factories, mocks           |
-| `sdd.agent.reviewer` | Code review, acceptance criteria sign-off, architectural review           |
+| `speckit.sdd-orchestrator.backend`  | NestJS modules, services, controllers, DTOs, use cases, application layer |
+| `speckit.sdd-orchestrator.database` | Entities, TypeORM migrations, repositories, query optimization            |
+| `speckit.sdd-orchestrator.infra`    | Docker Compose, CI/CD, environment config, deployment                     |
+| `speckit.sdd-orchestrator.security` | Auth guards, JWT config, input validation, OWASP checklist                |
+| `speckit.sdd-orchestrator.qa`       | Unit tests, integration tests, E2E tests, test factories, mocks           |
+| `speckit.sdd-orchestrator.reviewer` | Code review, acceptance criteria sign-off, architectural review           |
 
 ### Classification Logic
 
@@ -54,19 +54,19 @@ For each unchecked task (`- [ ]`):
 
 Classification hints:
 
-- "entity", "migration", "repository", "query", "table", "column" → `sdd.agent.database`
-- "service", "controller", "module", "DTO", "use case", "handler" → `sdd.agent.backend`
-- "guard", "JWT", "auth", "permission", "role", "validate", "sanitize" → `sdd.agent.security`
-- "test", "spec", "mock", "fixture", "factory", "coverage" → `sdd.agent.qa`
-- "docker", "compose", "CI", "workflow", "env", "deploy", "infra" → `sdd.agent.infra`
-- "review", "verify", "sign-off", "acceptance" → `sdd.agent.reviewer`
+- "entity", "migration", "repository", "query", "table", "column" → `speckit.sdd-orchestrator.database`
+- "service", "controller", "module", "DTO", "use case", "handler" → `speckit.sdd-orchestrator.backend`
+- "guard", "JWT", "auth", "permission", "role", "validate", "sanitize" → `speckit.sdd-orchestrator.security`
+- "test", "spec", "mock", "fixture", "factory", "coverage" → `speckit.sdd-orchestrator.qa`
+- "docker", "compose", "CI", "workflow", "env", "deploy", "infra" → `speckit.sdd-orchestrator.infra`
+- "review", "verify", "sign-off", "acceptance" → `speckit.sdd-orchestrator.reviewer`
 
 When a task spans multiple domains, assign the **primary** domain owner and note
 the co-owner. Example:
 
 ```
-- [ ] T005 →sdd.agent.backend Add UserService.findByEmail method
-  <!-- co-owner: sdd.agent.database (needs repository method) -->
+- [ ] T005 →speckit.sdd-orchestrator.backend Add UserService.findByEmail method
+  <!-- co-owner: speckit.sdd-orchestrator.database (needs repository method) -->
 ```
 
 ### Annotation Format
@@ -74,10 +74,10 @@ the co-owner. Example:
 Add the `→AgentName` annotation inline after the task ID. Do not change anything else:
 
 ```markdown
-- [ ] T001 →sdd.agent.database Create users entity with TypeORM
-- [ ] T002 →sdd.agent.backend Create UserModule with UserService
-- [ ] T003 →sdd.agent.security Add JWT auth guard to UserController
-- [ ] T004 →sdd.agent.qa Write unit tests for UserService
+- [ ] T001 →speckit.sdd-orchestrator.database Create users entity with TypeORM
+- [ ] T002 →speckit.sdd-orchestrator.backend Create UserModule with UserService
+- [ ] T003 →speckit.sdd-orchestrator.security Add JWT auth guard to UserController
+- [ ] T004 →speckit.sdd-orchestrator.qa Write unit tests for UserService
 ```
 
 ---
@@ -89,12 +89,12 @@ After annotating all tasks, produce a workload distribution table:
 ```
 | Agent                | Tasks | Phases |
 |---------------------|-------|--------|
-| sdd.agent.backend   |   N   |  1,2   |
-| sdd.agent.database  |   N   |  1     |
-| sdd.agent.qa        |   N   |  2,3   |
-| sdd.agent.security  |   N   |  2     |
-| sdd.agent.infra     |   N   |  3     |
-| sdd.agent.reviewer  |   N   |  3     |
+| speckit.sdd-orchestrator.backend   |   N   |  1,2   |
+| speckit.sdd-orchestrator.database  |   N   |  1     |
+| speckit.sdd-orchestrator.qa        |   N   |  2,3   |
+| speckit.sdd-orchestrator.security  |   N   |  2     |
+| speckit.sdd-orchestrator.infra     |   N   |  3     |
+| speckit.sdd-orchestrator.reviewer  |   N   |  3     |
 ```
 
 Flag any agent with 0 tasks (may be unused for this feature — that's fine).

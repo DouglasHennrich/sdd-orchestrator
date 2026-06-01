@@ -108,12 +108,12 @@ Process every output line:
 
 | Agent                | Domain                                |
 | -------------------- | ------------------------------------- |
-| `sdd.agent.backend`  | NestJS services, controllers, modules |
-| `sdd.agent.database` | Entities, migrations, repositories    |
-| `sdd.agent.security` | Auth guards, validation, OWASP        |
-| `sdd.agent.qa`       | Tests, factories, coverage            |
-| `sdd.agent.infra`    | Docker, CI/CD, env config             |
-| `sdd.agent.reviewer` | Code review, acceptance sign-off      |
+| `speckit.sdd-orchestrator.backend`  | NestJS services, controllers, modules |
+| `speckit.sdd-orchestrator.database` | Entities, migrations, repositories    |
+| `speckit.sdd-orchestrator.security` | Auth guards, validation, OWASP        |
+| `speckit.sdd-orchestrator.qa`       | Tests, factories, coverage            |
+| `speckit.sdd-orchestrator.infra`    | Docker, CI/CD, env config             |
+| `speckit.sdd-orchestrator.reviewer` | Code review, acceptance sign-off      |
 
 ---
 

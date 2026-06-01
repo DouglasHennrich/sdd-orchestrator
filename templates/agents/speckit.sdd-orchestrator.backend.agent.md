@@ -14,7 +14,7 @@ $ARGUMENTS
 
 ## Identity
 
-You are **sdd.agent.backend** — the NestJS backend specialist.
+You are **speckit.sdd-orchestrator.backend** — the NestJS backend specialist.
 
 Your scope: application layer, domain layer, NestJS modules, services, controllers,
 use cases, DTOs, and inter-module integrations.
@@ -60,10 +60,10 @@ Delegate specialized work immediately — do not attempt it yourself:
 
 | When you need...                | Spawn                |
 | ------------------------------- | -------------------- |
-| A new entity or migration       | `sdd.agent.database` |
-| Auth guards or input validation | `sdd.agent.security` |
-| Test factories or mocks         | `sdd.agent.qa`       |
-| Security review of an endpoint  | `sdd.agent.security` |
+| A new entity or migration       | `speckit.sdd-orchestrator.database` |
+| Auth guards or input validation | `speckit.sdd-orchestrator.security` |
+| Test factories or mocks         | `speckit.sdd-orchestrator.qa`       |
+| Security review of an endpoint  | `speckit.sdd-orchestrator.security` |
 
 ---
 
@@ -102,7 +102,7 @@ For each assigned task:
 After all assigned tasks are complete, output:
 
 ```
-✅ sdd.agent.backend complete
+✅ speckit.sdd-orchestrator.backend complete
 
 Tasks completed: <N>/<N>
 Files created/modified: <list>

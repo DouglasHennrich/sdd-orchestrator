@@ -134,23 +134,23 @@ Supported execution agents:
 
 | Agent                | Domain                                        |
 | -------------------- | --------------------------------------------- |
-| `sdd.agent.backend`  | NestJS services, controllers, modules, DTOs   |
-| `sdd.agent.database` | Entities, migrations, repositories, queries   |
-| `sdd.agent.infra`    | Docker, CI/CD, environment config             |
-| `sdd.agent.security` | Auth guards, validation, OWASP review         |
-| `sdd.agent.qa`       | Tests, test factories, E2E specs              |
-| `sdd.agent.reviewer` | Code review, acceptance criteria verification |
+| `speckit.sdd-orchestrator.backend`  | NestJS services, controllers, modules, DTOs   |
+| `speckit.sdd-orchestrator.database` | Entities, migrations, repositories, queries   |
+| `speckit.sdd-orchestrator.infra`    | Docker, CI/CD, environment config             |
+| `speckit.sdd-orchestrator.security` | Auth guards, validation, OWASP review         |
+| `speckit.sdd-orchestrator.qa`       | Tests, test factories, E2E specs              |
+| `speckit.sdd-orchestrator.reviewer` | Code review, acceptance criteria verification |
 
 ### Step 5 — Subagent Delegation Examples
 
 Agents MUST delegate specialized work:
 
 ```
-sdd.agent.backend  → sdd.agent.database   (when entity/migration work is needed)
-sdd.agent.backend  → sdd.agent.security   (when auth/validation is involved)
-sdd.agent.backend  → sdd.agent.qa         (when test factories are needed)
-sdd.agent.infra    → sdd.agent.security   (when secrets/env config is involved)
-sdd.agent.reviewer → sdd.agent.qa         (when test coverage needs verification)
+speckit.sdd-orchestrator.backend  → speckit.sdd-orchestrator.database   (when entity/migration work is needed)
+speckit.sdd-orchestrator.backend  → speckit.sdd-orchestrator.security   (when auth/validation is involved)
+speckit.sdd-orchestrator.backend  → speckit.sdd-orchestrator.qa         (when test factories are needed)
+speckit.sdd-orchestrator.infra    → speckit.sdd-orchestrator.security   (when secrets/env config is involved)
+speckit.sdd-orchestrator.reviewer → speckit.sdd-orchestrator.qa         (when test coverage needs verification)
 ```
 
 ---
