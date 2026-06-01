@@ -2,6 +2,11 @@
 
 `SDD Orchestrator for Spec-kit + Squad + Superpowers` is a Spec Kit extension designed to bind Spec-Kit workflows with Squad specialist agents and the Superpowers agent framework.
 
+- [Spec-kit](https://github.com/github/spec-kit)
+- [Squad](https://github.com/bradygaster/squad)
+- [Superpowers](https://github.com/obra/superpowers)
+
+
 ## What it does
 
 - Adds `.github/agents` definitions for custom SDD routing and execution agents
