@@ -48,7 +48,7 @@ Run the command below to copy the agent definitions into your project's `.github
 
 ### Regenerate Squad agents after spec changes
 
-When `/speckit.specify` completes, the extension runs `speckit.sdd-orchestrator.squad.generate` via the `after_specify` hook to keep Squad agent definitions and routing aligned with the latest spec.
+When `/speckit.specify` completes, the extension runs `speckit.sdd-orchestrator.generate` via the `after_specify` hook to keep Squad agent definitions and routing aligned with the latest spec.
 
 If you need to run the script directly:
 

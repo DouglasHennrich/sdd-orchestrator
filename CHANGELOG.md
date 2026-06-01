@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] - 2026-06-01
+
+### Fixed
+
+- Correct command naming to `speckit.sdd-orchestrator.*` so the extension passes Spec-Kit installation validation
+
 ## [1.0.0] - 2026-06-01
 
 ### Added

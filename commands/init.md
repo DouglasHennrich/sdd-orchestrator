@@ -110,7 +110,7 @@ $ARGUMENTS
 ## Notes
 
 - Running this command more than once is safe — it will not overwrite existing
-  agent files. Use `/speckit.squad.generate` to refresh agents as the spec
+  agent files. Use `/speckit.sdd-orchestrator.generate` to refresh agents as the spec
   evolves.
 - If `$ARGUMENTS` contains a domain or role name, generate an agent for that
   domain in addition to those inferred from the spec.

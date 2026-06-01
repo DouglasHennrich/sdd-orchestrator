@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: "sdd-orchestrator"
   name: "SDD Orchestrator for Spec-kit + Squad + Superpowers"
-  version: "1.0.0"
+  version: "1.0.1"
   description: "Integrates Spec-kit with Squad and Superpowers to orchestrate multi-agent workflows using Spec-Kit artifacts and Squad specialist agents."
   author: "Douglas Hennrich"
   repository: "https://github.com/DouglasHennrich/sdd-orchestrator"
@@ -26,13 +26,13 @@ provides:
     - name: "speckit.sdd-orchestrator.init"
       file: "commands/sdd.init.md"
       description: "Initialize SDD Orchestrator assets in the current project."
-    - name: "speckit.sdd-orchestrator.squad.generate"
+    - name: "speckit.sdd-orchestrator.generate"
       file: "commands/generate.md"
       description: "Re-generate Squad agent definitions when the spec changes."
 
 hooks:
   after_specify:
-    command: "speckit.sdd-orchestrator.squad.generate"
+    command: "speckit.sdd-orchestrator.generate"
     optional: false
     prompt: "Spec updated — regenerate Squad agent definitions?"
     description: "Keeps Squad agents aligned as the spec evolves"
