@@ -28,16 +28,33 @@ echo "Copying agent definitions to project .github/agents..."
 cp -v "$SOURCE_AGENTS"/*.md "$DEST_AGENTS/"
 
 PROJECT_COPILOT="$PROJECT_ROOT/.github/copilot-instructions.md"
-EXTENSION_COPILOT="$EXTENSION_ROOT/templates/copilot-instructions.md"
-
-if [[ -f "$PROJECT_COPILOT" && -f "$EXTENSION_COPILOT" ]]; then
-  if grep -q '<!-- SPECKIT-ORCHESTRATOR START -->' "$PROJECT_COPILOT" && grep -q '<!-- SPECKIT HOOKS -->' "$PROJECT_COPILOT"; then
-    echo "Project .github/copilot-instructions.md already contains SDD Orchestrator instructions."
-  else
-    echo "Appending SDD Orchestrator instructions to project .github/copilot-instructions.md..."
-    printf "\n" >> "$PROJECT_COPILOT"
-    cat "$EXTENSION_COPILOT" >> "$PROJECT_COPILOT"
+EXTENSION_COPILOT=""
+for candidate in \
+  "$EXTENSION_ROOT/.github/copilot-instructions.md" \
+  "$EXTENSION_ROOT/templates/copilot-instructions.md" \
+  "$EXTENSION_ROOT/copilot-instructions.md"; do
+  if [[ -f "$candidate" ]]; then
+    EXTENSION_COPILOT="$candidate"
+    break
   fi
+done
+
+if [[ ! -f "$PROJECT_COPILOT" ]]; then
+  if [[ -z "$EXTENSION_COPILOT" ]]; then
+    echo "WARNING: Extension copilot-instructions template not found; cannot create .github/copilot-instructions.md."
+  else
+    echo "Creating .github/copilot-instructions.md with SDD Orchestrator instructions..."
+    mkdir -p "$PROJECT_ROOT/.github"
+    cp "$EXTENSION_COPILOT" "$PROJECT_COPILOT"
+  fi
+elif [[ -z "$EXTENSION_COPILOT" ]]; then
+  echo "WARNING: Extension copilot-instructions template not found; skipping append."
+elif grep -q '<!-- SPECKIT-ORCHESTRATOR START -->' "$PROJECT_COPILOT" || grep -q '<!-- SPECKIT HOOKS -->' "$PROJECT_COPILOT"; then
+  echo "Project .github/copilot-instructions.md already contains SDD Orchestrator instructions."
+else
+  echo "Appending SDD Orchestrator instructions to project .github/copilot-instructions.md..."
+  printf "\n" >> "$PROJECT_COPILOT"
+  cat "$EXTENSION_COPILOT" >> "$PROJECT_COPILOT"
 fi
 
 if [[ ! -d "$PROJECT_ROOT/.squad" ]]; then
