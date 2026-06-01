@@ -1,5 +1,5 @@
 ---
-name: "sdd.init"
+name: "speckit.sdd-orchestrator.init"
 description: "Initialize the SDD Orchestrator integration by copying agent definitions and documentation into the project."
 ---
 
@@ -18,7 +18,7 @@ This command performs the following initialization steps:
 ## Usage
 
 ```bash
-/sdd.init
+/speckit.sdd-orchestrator.init
 ```
 
 The command is responsible for both:

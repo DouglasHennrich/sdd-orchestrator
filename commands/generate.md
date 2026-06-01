@@ -18,7 +18,7 @@ $ARGUMENTS
 ## Steps
 
 1. **Verify `.squad/` exists** — if not, tell the user to run
-   `/speckit.squad.init` first and stop.
+   `/speckit.sdd-orchestrator.init` first and stop.
 
 2. **Read the spec** from the active spec directory under `specs/` (e.g.,
    `specs/001-<name>/spec.md`).

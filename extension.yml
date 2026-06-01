@@ -23,22 +23,22 @@ requires:
 
 provides:
   commands:
-    - name: "sdd.init"
+    - name: "speckit.sdd-orchestrator.init"
       file: "commands/sdd.init.md"
       description: "Initialize SDD Orchestrator assets in the current project."
-    - name: "sdd.squad.generate"
+    - name: "speckit.sdd-orchestrator.squad.generate"
       file: "commands/generate.md"
       description: "Re-generate Squad agent definitions when the spec changes."
 
 hooks:
   after_specify:
-    command: "sdd.squad.generate"
+    command: "speckit.sdd-orchestrator.squad.generate"
     optional: false
     prompt: "Spec updated — regenerate Squad agent definitions?"
     description: "Keeps Squad agents aligned as the spec evolves"
 
   after_tasks:
-    command: sdd.route
+    command: "speckit.sdd-orchestrator.route"
     enabled: true
     optional: false
     prompt: Route tasks to specialist agents?
