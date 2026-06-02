@@ -61,7 +61,7 @@ Advisory artifacts (load if present, do not block if missing):
 Scan `tasks.md` for unchecked tasks (`- [ ]`). Every unchecked task MUST have
 a `→AgentName` annotation. If any unchecked task lacks one, stop and report:
 
-> "Tasks are not routed. Run `/sdd.route` before implementing."
+> "Tasks are not routed. Run `/speckit.sdd-orchestrator.route` before implementing."
 
 ---
 
@@ -72,7 +72,7 @@ If routing annotations are present, skip this section.
 If routing has NOT been performed yet, run it now:
 
 ```
-Spawn: sdd.route
+Spawn: speckit.sdd-orchestrator.route
 Arguments: <FEATURE_DIR>
 ```
 

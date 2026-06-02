@@ -1,5 +1,5 @@
 ---
-description: "Phase 0 — Codebase Architecture Analysis. Reads the knowledge base built by codebase.index and produces architecture-analysis.md scoped to the requested feature. Must run before sdd.discovery."
+description: "Phase 0 — Codebase Architecture Analysis. Reads the knowledge base built by speckit.sdd-orchestrator.codebase-index and produces architecture-analysis.md scoped to the requested feature. Must run before speckit.sdd-orchestrator.discovery."
 ---
 
 ## User Input
@@ -22,7 +22,7 @@ Load the following files before proceeding. If any is missing, stop and report:
 3. The feature description from `$ARGUMENTS`
 
 > If `.codebase/graph.json` is missing or has `generated_at` older than 24 hours,
-> output a warning and ask the user to run `/codebase.index` first before continuing.
+> output a warning and ask the user to run `/speckit.sdd-orchestrator.codebase-index` first before continuing.
 
 ---
 
@@ -141,5 +141,5 @@ Key findings:
   - Gaps: <N new structures required>
   - Conflicts: <N potential conflicts detected>
 
-Next: sdd.discovery will use this analysis for Phase 1.
+Next: speckit.sdd-orchestrator.discovery will use this analysis for Phase 1.
 ```

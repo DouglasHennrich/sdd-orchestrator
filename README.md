@@ -16,7 +16,7 @@
 
 ## Requirements
 
-- Spec Kit `>=0.8.11`
+- Spec Kit `>=0.8.18` (earlier versions do not wire `before_specify`/`after_specify` hooks into the specify command template, so the SDD hooks would silently no-op)
 - `@bradygaster/squad-cli` `>=0.9.4`
 - `superpowers`
 
@@ -31,7 +31,7 @@ specify extension add --dev /path/to/sdd-orchestrator
 For published releases, install from the release archive URL:
 
 ```bash
-specify extension add sdd-orchestrator --from https://github.com/DouglasHennrich/sdd-orchestrator/archive/refs/tags/v1.0.5.zip
+specify extension add sdd-orchestrator --from https://github.com/DouglasHennrich/sdd-orchestrator/archive/refs/tags/v1.1.0.zip
 ```
 
 ## Usage
@@ -46,9 +46,33 @@ Run the command below to copy the agent definitions into your project's `.github
 /speckit.sdd-orchestrator.init
 ```
 
+### Run the orchestrated workflow
+
+Spec-Kit cannot literally rewrite what `/speckit.specify` does — a slash command
+always runs its own registered template. To get the SDD pipeline, run the
+**orchestrated** commands this extension registers instead of the stock ones:
+
+| Instead of…          | Run…                                  |
+| -------------------- | ------------------------------------- |
+| `/speckit.specify`   | `/speckit.sdd-orchestrator.specify`   |
+| `/speckit.implement` | `/speckit.sdd-orchestrator.implement` |
+
+`/speckit.sdd-orchestrator.specify` orchestrates the full pipeline:
+
+```
+Phase -1  speckit.sdd-orchestrator.codebase-index      → .codebase/graph.json + knowledge-base.md
+Phase  0  speckit.sdd-orchestrator.codebase-architect  → .codebase/architecture-analysis.md
+Phase  1  speckit.sdd-orchestrator.discovery           → <feature_dir>/discovery.md
+Phase  2  speckit.specify (stock)                      → <feature_dir>/spec.md   ← authoritative
+```
+
+It then fires the `after_specify` hook to keep Squad agents aligned.
+
 ### Regenerate Squad agents after spec changes
 
-When `/speckit.specify` completes, the extension runs `speckit.sdd-orchestrator.generate` via the `after_specify` hook to keep Squad agent definitions and routing aligned with the latest spec.
+When `specify speckit.sdd-orchestrator.specify` completes, the extension runs `speckit.sdd-orchestrator.generate` via the `after_specify` hook to keep Squad agent definitions and routing aligned with the latest spec.
+
+**Important:** Use the global `specify` CLI installation to launch the orchestrator and hooks. Avoid calling a local `speckit` binary directly, because the global `specify` binary is required to resolve `.specify/extensions.yml` hooks correctly.
 
 If you need to run the script directly:
 

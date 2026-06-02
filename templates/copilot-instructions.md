@@ -12,49 +12,50 @@ All feature work follows the pipeline defined in `Multi-Agent SDD Orchestrator.m
 The mandatory execution order is:
 
 ```
-Phase -1  codebase.index       → .codebase/graph.json + knowledge-base.md
-Phase  0  codebase.architect   → .codebase/architecture-analysis.md
-Phase  1  sdd.discovery        → <feature_dir>/discovery.md
+Phase -1  speckit.sdd-orchestrator.codebase-index       → .codebase/graph.json + knowledge-base.md
+Phase  0  speckit.sdd-orchestrator.codebase-architect   → .codebase/architecture-analysis.md
+Phase  1  speckit.sdd-orchestrator.discovery            → <feature_dir>/discovery.md
 Phase  2  speckit.specify      → <feature_dir>/spec.md          ← AUTHORITATIVE
 Phase  3  speckit.plan         → <feature_dir>/plan.md          ← AUTHORITATIVE
 Phase  4  speckit.tasks        → <feature_dir>/tasks.md         ← AUTHORITATIVE
-Phase  5  sdd.route            → tasks.md annotated with →AgentName
-Phase  6  sdd.implement        → parallel execution by phase
+Phase  5  speckit.sdd-orchestrator.route            → tasks.md annotated with →AgentName
+Phase  6  speckit.sdd-orchestrator.implement        → parallel execution by phase
 ```
 
 ---
 
-## Override: /speckit.specify → sdd.specify
+## Entry point: use the orchestrated commands, not the stock ones
 
-**IMPORTANT:** `/speckit.specify` is overridden in this project.
+**IMPORTANT:** Spec-Kit cannot literally rewrite what `/speckit.specify` does — a
+slash command always runs its own registered template. To get the SDD pipeline
+you must run the **orchestrated** commands this extension registers:
 
-When the user runs `/speckit.specify` or the `speckit.specify` agent is invoked:
+| Instead of running… | Run the orchestrated command… |
+| ------------------- | ----------------------------- |
+| `/speckit.specify`  | `/speckit.sdd-orchestrator.specify`  |
+| `/speckit.implement`| `/speckit.sdd-orchestrator.implement`|
 
-1. **Do NOT run the stock speckit.specify logic directly.**
-2. Instead, invoke the `sdd.specify` agent, passing the full feature description.
-3. `sdd.specify` will orchestrate Phases -1, 0, 1, and then delegate back to Spec-Kit for Phase 2.
+When the user asks to "specify a feature", "create a spec", or types
+`/speckit.specify`:
 
-This override applies whenever the user says:
+1. **Do NOT run the stock `speckit.specify` logic directly.**
+2. Run `/speckit.sdd-orchestrator.specify` (or invoke the
+   `speckit.sdd-orchestrator.specify` agent) with the full feature description.
+3. That command orchestrates Phase -1 → 0 → 1 (each a registered sub-command),
+   then runs the stock `speckit.specify` logic for Phase 2, then fires the
+   `after_specify` hook.
 
-- "speckit specify", "/speckit.specify", "create a spec", "specify this feature"
-- or the `speckit.specify` agent is spawned
-
----
-
-## Override: /speckit.implement → sdd.implement
-
-**IMPORTANT:** `/speckit.implement` is overridden in this project.
-
-When the user runs `/speckit.implement` or the `speckit.implement` agent is invoked:
+When the user asks to "implement the tasks" or types `/speckit.implement`:
 
 1. **Do NOT execute tasks sequentially.**
-2. Instead, invoke the `sdd.implement` agent.
-3. `sdd.implement` will verify routing, then fan out to specialist agents in parallel per phase.
+2. Run `/speckit.sdd-orchestrator.implement` instead. It verifies `→AgentName`
+   routing (running `/speckit.sdd-orchestrator.route` first if needed), then fans
+   out to specialist agents in parallel per phase.
 
-This override applies whenever the user says:
-
-- "speckit implement", "implement the tasks", "implement the speckit tasks"
-- or the `speckit.implement` agent is spawned
+**IMPORTANT:** Launch this workflow through the global `specify` CLI, not a local
+`speckit` binary, so hooks and extension sub-commands resolve correctly. Requires
+Spec-Kit `>=0.8.18` (earlier versions do not wire `after_specify`/`before_specify`
+hooks into the specify command template, so the SDD hooks will silently no-op).
 
 ---
 
@@ -84,6 +85,21 @@ After **every** speckit command completes, run ALL hooks for the corresponding e
 bash .specify/scripts/bash/list-hooks.sh <event>
 ```
 
+After `speckit.sdd-orchestrator.specify` completes, the orchestrator should display a phase summary with check markers for each step, for example:
+
+```
+Phase -1  speckit.sdd-orchestrator.codebase-index       ✓ .codebase/graph.json + knowledge-base.md
+Phase  0  speckit.sdd-orchestrator.codebase-architect   ✓ .codebase/architecture-analysis.md
+Phase  1  speckit.sdd-orchestrator.discovery        ✓ <feature_dir>/discovery.md
+Phase  2  speckit.specify      ✓ <feature_dir>/spec.md
+Phase  3  speckit.plan         ✓ <feature_dir>/plan.md
+Phase  4  speckit.tasks        ✓ <feature_dir>/tasks.md
+Phase  5  speckit.sdd-orchestrator.route            ✓ tasks.md annotated with →AgentName
+Phase  6  speckit.sdd-orchestrator.implement        ✓ parallel execution by phase
+```
+
+This makes the executed workflow visible and confirms that each SDD phase was completed.
+
 Event mapping:
 
 | After completing...  | Event name           |
@@ -106,8 +122,8 @@ Process every output line:
 
 ## Execution Agents (Phase 6)
 
-| Agent                | Domain                                |
-| -------------------- | ------------------------------------- |
+| Agent                               | Domain                                |
+| ----------------------------------- | ------------------------------------- |
 | `speckit.sdd-orchestrator.backend`  | NestJS services, controllers, modules |
 | `speckit.sdd-orchestrator.database` | Entities, migrations, repositories    |
 | `speckit.sdd-orchestrator.security` | Auth guards, validation, OWASP        |
@@ -139,9 +155,9 @@ Large tasks and cross-domain work MUST be delegated to the appropriate specialis
 
 This repository uses the `sdd-orchestrator` Spec Kit extension to connect Spec Kit with Squad and Superpowers.
 
-- After `/speckit.tasks`, the configured `after_tasks` hook runs `sdd.route`.
-- `sdd.route` annotates `tasks.md` with `→AgentName` assignments for the specialist agents defined in `.github/agents`.
-- The extension enforces this project’s custom SDD workflow by integrating `sdd.specify`, `sdd.implement`, and `sdd.discovery` orchestration.
+- After `/speckit.tasks`, the configured `after_tasks` hook runs `speckit.sdd-orchestrator.route`.
+- `speckit.sdd-orchestrator.route` annotates `tasks.md` with `→AgentName` assignments for the specialist agents defined in `.github/agents`.
+- The extension enforces this project’s custom SDD workflow by integrating `speckit.sdd-orchestrator.specify`, `speckit.sdd-orchestrator.implement`, and `speckit.sdd-orchestrator.discovery` orchestration.
 - Keep the `.github/agents` files in sync with the extension whenever task routing or specialist behavior changes.
 
 <!-- SPECKIT-ORCHESTRATOR END -->
@@ -167,7 +183,7 @@ After **every** speckit command completes, you MUST run ALL hooks for the corres
 2. The script outputs one line per enabled hook:
 
    ```
-   COMMAND=sdd.route OPTIONAL=false PROMPT=Routing tasks to Squad agents...
+   COMMAND=speckit.sdd-orchestrator.route OPTIONAL=false PROMPT=Routing tasks to Squad agents...
    ```
 
 3. Process **every line**:

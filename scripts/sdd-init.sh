@@ -80,7 +80,11 @@ if [[ ! -f "$SOURCE_DOC" ]]; then
   exit 1
 fi
 
-echo "Copying Multi-Agent SDD Orchestrator document to installed extension folder..."
-cp -v "$SOURCE_DOC" "$DEST_DOC"
+if [[ "$SOURCE_DOC" != "$DEST_DOC" ]]; then
+  echo "Copying Multi-Agent SDD Orchestrator document to installed extension folder..."
+  cp -v "$SOURCE_DOC" "$DEST_DOC"
+else
+  echo "Multi-Agent SDD Orchestrator document already in place; skipping copy."
+fi
 
 echo "SDD Orchestrator initialization complete."

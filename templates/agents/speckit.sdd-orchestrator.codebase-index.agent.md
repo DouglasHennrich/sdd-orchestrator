@@ -242,5 +242,5 @@ Files written:
   .codebase/graph.json
   .codebase/knowledge-base.md
 
-Next: codebase.architect will use these artifacts for Phase 0.
+Next: speckit.sdd-orchestrator.codebase-architect will use these artifacts for Phase 0.
 ```

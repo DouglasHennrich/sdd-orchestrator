@@ -46,6 +46,10 @@ Check `.specify/extensions.yml` for `hooks.before_specify` entries and execute
 them per the standard Spec-Kit hook protocol (mandatory hooks run immediately,
 optional hooks are announced to the user).
 
+**IMPORTANT:** This orchestrator must be invoked through the global `specify`
+CLI so that hook execution and extension commands are resolved properly. Do not
+invoke a local `speckit` binary directly for this flow.
+
 ---
 
 ## Phase -1 — Repository Knowledge Base
@@ -56,14 +60,14 @@ phases do not re-scan the entire monorepo.
 Run as a subagent:
 
 ```
-Spawn: codebase.index
-Arguments: (none — codebase.index performs its own staleness check)
+Spawn: speckit.sdd-orchestrator.codebase-index
+Arguments: (none — codebase-index performs its own staleness check)
 ```
 
-Wait for completion. If `codebase.index` reports the graph is already fresh
+Wait for completion. If `speckit.sdd-orchestrator.codebase-index` reports the graph is already fresh
 (staleness check passed), proceed immediately to Phase 0.
 
-If `codebase.index` fails or reports errors, stop the pipeline and report:
+If `speckit.sdd-orchestrator.codebase-index` fails or reports errors, stop the pipeline and report:
 
 > "Phase -1 failed. Knowledge base could not be built. Resolve the issue and retry."
 
@@ -76,7 +80,7 @@ If `codebase.index` fails or reports errors, stop the pipeline and report:
 Run as a subagent:
 
 ```
-Spawn: codebase.architect
+Spawn: speckit.sdd-orchestrator.codebase-architect
 Arguments: <exact feature description from $ARGUMENTS>
 ```
 
@@ -96,7 +100,7 @@ before the spec is written.
 Run as a subagent:
 
 ```
-Spawn: sdd.discovery
+Spawn: speckit.sdd-orchestrator.discovery
 Arguments: <exact feature description from $ARGUMENTS>
 ```
 
@@ -109,7 +113,7 @@ If neither file exists after the subagent completes, stop and report:
 
 > "Phase 1 failed. discovery.md was not produced. Cannot proceed."
 
-**Important:** `sdd.discovery` may surface **Critical** or **High** severity open
+**Important:** `speckit.sdd-orchestrator.discovery` may surface **Critical** or **High** severity open
 questions. Present these to the user before proceeding:
 
 ```

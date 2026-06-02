@@ -1,5 +1,5 @@
 ---
-description: "Phase 1 — SDD Discovery. Challenges assumptions and surfaces hidden risks using the Superpowers discovery framework. Runs after codebase.architect and before speckit.specify."
+description: "Phase 1 — SDD Discovery. Challenges assumptions and surfaces hidden risks using the Superpowers discovery framework. Runs after speckit.sdd-orchestrator.codebase-architect and before speckit.specify."
 ---
 
 ## User Input
@@ -33,7 +33,7 @@ Load the following before proceeding:
 
 If `.codebase/architecture-analysis.md` is missing, stop and report:
 
-> "Architecture Analysis is required before Discovery. Run `/codebase.architect` first."
+> "Architecture Analysis is required before Discovery. Run `/speckit.sdd-orchestrator.codebase-architect` first."
 
 ---
 

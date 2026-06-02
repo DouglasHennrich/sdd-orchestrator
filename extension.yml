@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: "sdd-orchestrator"
   name: "SDD Orchestrator for Spec-kit + Squad + Superpowers"
-  version: "1.0.5"
+  version: "1.1.0"
   description: "Integrates Spec-kit with Squad and Superpowers to orchestrate multi-agent workflows using Spec-Kit artifacts and Squad specialist agents."
   author: "Douglas Hennrich"
   repository: "https://github.com/DouglasHennrich/sdd-orchestrator"
@@ -13,7 +13,7 @@ extension:
   homepage: "https://github.com/DouglasHennrich/sdd-orchestrator"
 
 requires:
-  speckit_version: ">=0.8.11"
+  speckit_version: ">=0.8.18"
   tools:
     - name: "@bradygaster/squad-cli"
       version: ">=0.9.4"
@@ -29,6 +29,28 @@ provides:
     - name: "speckit.sdd-orchestrator.generate"
       file: "commands/generate.md"
       description: "Re-generate Squad agent definitions when the spec changes."
+
+    # --- Orchestration entry points (the flow users actually invoke) ---
+    - name: "speckit.sdd-orchestrator.specify"
+      file: "commands/orchestrate-specify.md"
+      description: "Orchestrated specify: runs Phase -1/0/1 then stock speckit.specify (Phase 2)."
+    - name: "speckit.sdd-orchestrator.implement"
+      file: "commands/orchestrate-implement.md"
+      description: "Orchestrated implement: verifies routing then fans out to specialist agents per phase."
+
+    # --- Phase sub-commands (invoked by the orchestrator and by hooks) ---
+    - name: "speckit.sdd-orchestrator.codebase-index"
+      file: "commands/codebase-index.md"
+      description: "Phase -1: build or refresh the repository knowledge graph."
+    - name: "speckit.sdd-orchestrator.codebase-architect"
+      file: "commands/codebase-architect.md"
+      description: "Phase 0: produce a feature-scoped architecture analysis."
+    - name: "speckit.sdd-orchestrator.discovery"
+      file: "commands/discovery.md"
+      description: "Phase 1: discovery — surface risks and open questions before the spec."
+    - name: "speckit.sdd-orchestrator.route"
+      file: "commands/route.md"
+      description: "Phase 5: annotate tasks.md with →AgentName specialist assignments."
 
 hooks:
   after_specify:
