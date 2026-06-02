@@ -13,27 +13,17 @@ This is the orchestrated entry point for implementation. Run it instead of
 $ARGUMENTS
 ```
 
-## Steps
+## What this command does
 
-1. **Process `before_implement` hooks:**
+Run the `speckit.sdd-orchestrator.implement` agent. It executes everything inline
+in the conversation:
 
-   ```bash
-   bash .specify/scripts/bash/list-hooks.sh before_implement
-   ```
+1. Processes `before_implement` hooks via `EXECUTE_COMMAND:` markers.
+2. Verifies `tasks.md` has `→AgentName` routing annotations — if not, runs
+   `speckit.sdd-orchestrator.route` (via `EXECUTE_COMMAND:`) first.
+3. Executes tasks phase-by-phase, dispatching the specialist execution agents
+   (backend, database, security, qa, infra, reviewer) in parallel per phase.
+   Every agent follows Test Driven Development (RULE-012).
+4. Processes `after_implement` hooks via `EXECUTE_COMMAND:` markers.
 
-   Execute mandatory hooks immediately; announce optional hooks for confirmation.
-
-2. **Run the orchestrator agent.** Invoke the
-   `speckit.sdd-orchestrator.implement` agent. It verifies that `tasks.md` has
-   `→AgentName` routing annotations (if not, it runs
-   `speckit.sdd-orchestrator.route` first), then fans out to the specialist
-   execution agents in parallel, grouped by phase. All execution agents follow
-   TDD (RULE-012).
-
-3. **Process `after_implement` hooks:**
-
-   ```bash
-   bash .specify/scripts/bash/list-hooks.sh after_implement
-   ```
-
-   Execute every returned hook per the OPTIONAL protocol.
+The agent never begins implementation before routing is complete (RULE-014).

@@ -1,5 +1,5 @@
 ---
-description: "SDD Orchestrator entry point. Intercepts /speckit.specify and runs the full SDD pre-specification pipeline (Phase -1 → 0 → 1) before delegating to Spec-Kit. REPLACES the stock speckit.specify agent for this project."
+description: "Create a feature specification through the multi-agent SDD pipeline: builds a codebase knowledge base, a feature-scoped architecture analysis, a risk discovery, and a brainstorm, then writes the authoritative spec.md enriched by all four artifacts."
 handoffs:
   - label: Build Technical Plan
     agent: speckit.plan
@@ -16,204 +16,215 @@ handoffs:
 $ARGUMENTS
 ```
 
-You **MUST** use the feature description from `$ARGUMENTS` throughout this entire workflow.
+The text the user typed after `/speckit.sdd-orchestrator.specify` **is** the
+feature description. Assume you always have it available in this conversation
+even if `$ARGUMENTS` appears literally below. You **MUST** use it throughout this
+entire workflow. Do not ask the user to repeat it unless they provided an empty
+command.
 
 ---
 
-## SDD Orchestrator — Pre-Specification Pipeline
+## Your Job
 
-This agent is the **entry point** for all feature work in this project.
-
-Before any specification is written, it enforces the full SDD pipeline defined in
-`Multi-Agent SDD Orchestrator.md`:
+You are the entry point for feature work in this project. When invoked, you run
+the **entire pipeline yourself, inline, in this conversation** — you do NOT
+delegate to a CLI, you do NOT spawn external subagents, and you do NOT stop early.
+Execute every phase in order and produce every artifact before writing the spec.
 
 ```
-Phase -1 → Phase 0 → Phase 1 → Phase 2 (Spec-Kit Specify)
+Phase -1  Knowledge Base       → .codebase/graph.json + .codebase/knowledge-base.md
+Phase  0  Architecture         → .codebase/architecture-analysis.md
+Phase  1  Discovery            → <feature_dir>/discovery.md
+Phase  1.5 Brainstorm          → <feature_dir>/brainstorm.md
+Phase  2  Specification        → <feature_dir>/spec.md   ← AUTHORITATIVE
 ```
 
-**RULE-002**: Architecture Analysis must always execute before Discovery.
-**RULE-003**: Discovery must always execute before Specification.
-**RULE-015**: Codebase Architect findings must be considered before any specification.
-**RULE-016**: No agent may bypass any workflow phase.
+**RULE-016**: No phase may be skipped. **RULE-002/003/015**: Architecture before
+Discovery; Discovery before Brainstorm; both before Specification.
+
+If at any point you cannot complete a phase, STOP and report which phase failed
+and why — do **not** fall back to editing code directly. This command produces a
+specification; it never implements the feature.
 
 ---
 
-## Pre-Execution: Git Branch Hook
+## Pre-Execution: before_specify hooks
 
-Before running any phase, process extension hooks:
+Check if `.specify/extensions.yml` exists. If it does, read it and look for
+entries under `hooks.before_specify`. Filter out hooks with `enabled: false`.
+For each executable mandatory hook (`optional: false`), emit:
 
-Check `.specify/extensions.yml` for `hooks.before_specify` entries and execute
-them per the standard Spec-Kit hook protocol (mandatory hooks run immediately,
-optional hooks are announced to the user).
+```
+EXECUTE_COMMAND: {command}
+```
 
-**IMPORTANT:** This orchestrator must be invoked through the global `specify`
-CLI so that hook execution and extension commands are resolved properly. Do not
-invoke a local `speckit` binary directly for this flow.
+and wait for its result before continuing (this is typically the git extension
+creating the feature branch). Announce optional hooks and let the user decide.
+If the file is missing or unparseable, skip silently.
 
 ---
 
 ## Phase -1 — Repository Knowledge Base
 
-**Purpose:** Ensure a fresh, token-efficient knowledge graph exists so subsequent
-phases do not re-scan the entire monorepo.
+Ensure a fresh, token-efficient knowledge graph exists so later phases don't
+re-scan the whole repo.
 
-Run as a subagent:
+1. If `.codebase/graph.json` exists and its `generated_at` is < 24h old AND no
+   sentinel files changed (`**/package.json`, `**/*.entity.ts`, `**/*.module.ts`,
+   `**/*.controller.ts`, migrations, `**/schema.prisma`, `.github/agents/**`),
+   the graph is **fresh** — skip scanning and reuse it.
+2. Otherwise scan the repository (workspace packages, modules/bounded contexts,
+   entities & tables, API surface, messaging/events, shared abstractions,
+   conventions, infrastructure) and write:
+   - `.codebase/graph.json` — structured graph (packages, modules, entities,
+     api_surface, messaging, conventions, infrastructure)
+   - `.codebase/knowledge-base.md` — human-readable narrative summary
 
-```
-Spawn: speckit.sdd-orchestrator.codebase-index
-Arguments: (none — codebase-index performs its own staleness check)
-```
-
-Wait for completion. If `speckit.sdd-orchestrator.codebase-index` reports the graph is already fresh
-(staleness check passed), proceed immediately to Phase 0.
-
-If `speckit.sdd-orchestrator.codebase-index` fails or reports errors, stop the pipeline and report:
-
-> "Phase -1 failed. Knowledge base could not be built. Resolve the issue and retry."
+Report: `Phase -1 ✓ knowledge base [fresh | rebuilt]`.
 
 ---
 
 ## Phase 0 — Codebase Architecture Analysis
 
-**Purpose:** Produce a feature-scoped architecture analysis using the knowledge base.
+Using the knowledge base as the source of truth (not a fresh scan), analyze the
+feature from `$ARGUMENTS` and write `.codebase/architecture-analysis.md` with:
+Existing Architecture Overview, Related Modules, Existing Patterns, Existing
+Abstractions, Potential Conflicts, **Reuse Opportunities**, **Integration
+Points**, **Architectural Constraints**, Architectural Gaps, and a Verdict.
 
-Run as a subagent:
-
-```
-Spawn: speckit.sdd-orchestrator.codebase-architect
-Arguments: <exact feature description from $ARGUMENTS>
-```
-
-Wait for completion. Verify `.codebase/architecture-analysis.md` was written.
-
-If the file is missing after the subagent completes, stop and report:
-
-> "Phase 0 failed. architecture-analysis.md was not produced. Cannot proceed."
+Cite specific module names, file paths, and table names. Report:
+`Phase 0 ✓ .codebase/architecture-analysis.md`.
 
 ---
 
 ## Phase 1 — SDD Discovery
 
-**Purpose:** Challenge assumptions, surface risks, and generate open questions
-before the spec is written.
+Act as a relentless challenger — break the feature before it is built. Using the
+architecture analysis and knowledge base, work through: Assumptions, Missing
+Requirements, Edge Cases, Failure Scenarios, Security Concerns (OWASP lens),
+Scalability Concerns, Operational Concerns, Architectural Conflicts, Open
+Questions, and Recommendations. Tag each finding with severity
+(`critical|high|medium|low`) and type.
 
-Run as a subagent:
+Write to `<feature_dir>/discovery.md` if the feature directory already exists,
+otherwise to `.codebase/discovery-draft.md` (it will be moved into the feature
+directory in Phase 2).
 
-```
-Spawn: speckit.sdd-orchestrator.discovery
-Arguments: <exact feature description from $ARGUMENTS>
-```
-
-Wait for completion. Check for:
-
-- `discovery.md` in the feature directory (if `.specify/feature.json` exists), OR
-- `.codebase/discovery-draft.md` (if specify hasn't run yet — this is expected)
-
-If neither file exists after the subagent completes, stop and report:
-
-> "Phase 1 failed. discovery.md was not produced. Cannot proceed."
-
-**Important:** `speckit.sdd-orchestrator.discovery` may surface **Critical** or **High** severity open
-questions. Present these to the user before proceeding:
+If discovery surfaces **critical** or **high** open questions, present them to
+the user now:
 
 ```
-⚠ Discovery surfaced <N> open question(s) that should be resolved before specification:
+⚠ Discovery surfaced <N> open question(s) to resolve before specification:
 
-<list open questions from discovery output>
+<list the critical/high open questions>
 
-You may:
-  A) Answer these questions now (recommended for critical/high items)
-  B) Proceed anyway — unanswered questions will be noted as assumptions in spec.md
+  A) Answer now (recommended for critical/high items)
+  B) Proceed — unanswered questions become documented assumptions in spec.md
 ```
 
-If the user chooses to answer questions, incorporate their answers into the
-`$ARGUMENTS` context before proceeding to Phase 2.
+Incorporate any answers the user gives into the context for the next phases.
+Report: `Phase 1 ✓ discovery.md`.
 
 ---
 
-## Phase 2 — Specification (Spec-Kit)
+## Phase 1.5 — Brainstorm (Superpowers)
 
-**Purpose:** Generate the authoritative `spec.md` using Spec-Kit, enriched by
-the advisory artifacts from Phases 0 and 1.
+Run the `superpowers:brainstorming` skill to interactively refine intent,
+requirements, and design **before** writing the spec. Use the architecture
+analysis and discovery as input — focus the conversation on the open questions
+and risks they surfaced.
 
-Now execute the **stock Spec-Kit specify logic** below, with these additions:
+- Read and follow the `superpowers:brainstorming` skill fully.
+- Ask questions one at a time; explore the codebase when a question can be
+  answered from it; resolve fuzzy or overloaded terminology.
+- Continue until a shared, precise understanding is reached.
 
-**Additional context to inject into the specification:**
+Capture the outcome — resolved decisions, chosen approach, rejected alternatives
+and why, and agreed terminology — in `<feature_dir>/brainstorm.md` (or
+`.codebase/brainstorm-draft.md` if the feature directory does not exist yet, to
+be moved in Phase 2). Report: `Phase 1.5 ✓ brainstorm.md`.
 
-- Read `.codebase/architecture-analysis.md` — use its "Reuse Opportunities",
-  "Integration Points", and "Architectural Constraints" sections to inform
-  the spec's constraints and dependencies sections.
-- Read the discovery file — use its "Missing Requirements" and
-  "Recommendations" sections to inform acceptance criteria and business rules.
-- Advisory artifacts enrich the spec but do NOT replace it (RULE-010, RULE-011).
-  The spec you write is the authoritative source.
+> `discovery.md` (automated risk analysis) and `brainstorm.md` (interactive
+> refinement) are complementary — both are produced and both feed the spec.
 
 ---
 
-## Spec-Kit Specify — Standard Outline
+## Phase 2 — Specification
 
-From this point forward, follow the standard Spec-Kit specify protocol:
+Now write the authoritative `spec.md`, enriched by all four artifacts. Advisory
+artifacts inform the spec but never replace it — the spec you write is the single
+source of truth (RULE-001, RULE-010, RULE-011).
 
-1. **Generate a concise short name** (2–4 words) for the feature using the
-   feature description. Use action-noun format (e.g., "add-user-auth",
-   "fix-payment-timeout"). Preserve technical terms and acronyms.
+1. **Generate a concise short name** (2–4 words, action-noun, preserve
+   acronyms): e.g. `add-user-auth`, `fix-payment-timeout`.
 
-2. **Run the feature creation script:**
+2. **Create the feature directory:**
 
    ```bash
    bash .specify/scripts/bash/create-new-feature.sh "<short-name>" --json
    ```
 
-   Parse `FEATURE_DIR` from the output. All subsequent file paths use this dir.
+   Parse `FEATURE_DIR` from the JSON output. Use it for all paths below. (If a
+   `before_specify` hook already created the branch, reuse the values it emitted.)
 
-3. **Move discovery draft** (if it exists):
-   If `.codebase/discovery-draft.md` exists, move it to `<FEATURE_DIR>/discovery.md`.
+3. **Move drafts into the feature directory** (if they exist):
+   - `.codebase/discovery-draft.md` → `<FEATURE_DIR>/discovery.md`
+   - `.codebase/brainstorm-draft.md` → `<FEATURE_DIR>/brainstorm.md`
 
-4. **Write `<FEATURE_DIR>/spec.md`** using the spec template
-   (`.specify/templates/spec-template.md`), incorporating:
+4. **Write `<FEATURE_DIR>/spec.md`** from `.specify/templates/spec-template.md`,
+   injecting:
    - The feature description from `$ARGUMENTS`
-   - User answers to open questions (if any were provided)
-   - Constraints and dependencies from `architecture-analysis.md`
-   - Recommendations from `discovery.md`
+   - **`brainstorm.md`** — resolved decisions, chosen approach, terminology
+     (primary source for scope and intent)
+   - **`architecture-analysis.md`** — Reuse Opportunities, Integration Points,
+     Architectural Constraints → spec Constraints & Dependencies
+   - **`discovery.md`** — Missing Requirements, Recommendations, high/critical
+     risks → spec Acceptance Criteria, Business Rules, Known Risks
 
-   The spec must include:
-   - Functional Requirements
-   - Non-Functional Requirements
-   - Acceptance Criteria
-   - Business Rules
-   - Constraints (referencing architecture analysis)
-   - Dependencies (modules, services, entities from knowledge base)
-   - Known Risks (from discovery — high/critical items)
+   The spec must include: Functional Requirements, Non-Functional Requirements,
+   Acceptance Criteria, Business Rules, Constraints (cite architecture analysis),
+   Dependencies (modules/services/entities from the knowledge base), and Known
+   Risks (high/critical from discovery).
 
-5. **Update `.specify/feature.json`** with the new `feature_directory`.
+5. **Persist the resolved path** to `.specify/feature.json`:
 
-6. **Run after_specify hooks:**
-   ```bash
-   bash .specify/scripts/bash/list-hooks.sh after_specify
+   ```json
+   { "feature_directory": "<resolved FEATURE_DIR>" }
    ```
-   Execute all hooks per the standard hook protocol.
+
+Report: `Phase 2 ✓ spec.md`.
+
+---
+
+## Post-Execution: after_specify hooks
+
+After `spec.md` is written, check `.specify/extensions.yml` for
+`hooks.after_specify`. Filter out `enabled: false`. For each mandatory hook
+(`optional: false`), emit:
+
+```
+EXECUTE_COMMAND: {command}
+```
+
+and wait for the result (this is what runs `speckit.sdd-orchestrator.generate`).
+Announce optional hooks for confirmation. Skip silently if none.
 
 ---
 
 ## Completion
 
-After all phases complete, output a pipeline summary:
+Output the pipeline summary:
 
 ```
-✅ SDD Pre-Specification Pipeline complete
+✅ SDD Specification Pipeline complete
 
-Phase -1 (Knowledge Base): ✓ [fresh | rebuilt]
-Phase  0 (Architecture):   ✓ .codebase/architecture-analysis.md
-Phase  1 (Discovery):      ✓ <FEATURE_DIR>/discovery.md
-Phase  2 (Specification):  ✓ <FEATURE_DIR>/spec.md
+Phase -1 (Knowledge Base):  ✓ [fresh | rebuilt]
+Phase  0 (Architecture):    ✓ .codebase/architecture-analysis.md
+Phase  1 (Discovery):       ✓ <FEATURE_DIR>/discovery.md
+Phase  1.5 (Brainstorm):    ✓ <FEATURE_DIR>/brainstorm.md
+Phase  2 (Specification):   ✓ <FEATURE_DIR>/spec.md  ← single source of truth
 
-Advisory artifacts produced:
-  - .codebase/architecture-analysis.md (project-level, reused across features)
-  - <FEATURE_DIR>/discovery.md (feature-scoped, advisory only)
+Advisory artifacts: architecture-analysis.md, discovery.md, brainstorm.md
 
-Authoritative artifact:
-  - <FEATURE_DIR>/spec.md ← single source of truth
-
-Next steps:
-  /speckit.plan — generate the implementation plan
+Next: /speckit.plan — generate the implementation plan
 ```

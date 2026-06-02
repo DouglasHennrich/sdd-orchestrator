@@ -12,15 +12,22 @@ All feature work follows the pipeline defined in `Multi-Agent SDD Orchestrator.m
 The mandatory execution order is:
 
 ```
-Phase -1  speckit.sdd-orchestrator.codebase-index       → .codebase/graph.json + knowledge-base.md
-Phase  0  speckit.sdd-orchestrator.codebase-architect   → .codebase/architecture-analysis.md
-Phase  1  speckit.sdd-orchestrator.discovery            → <feature_dir>/discovery.md
-Phase  2  speckit.specify      → <feature_dir>/spec.md          ← AUTHORITATIVE
-Phase  3  speckit.plan         → <feature_dir>/plan.md          ← AUTHORITATIVE
-Phase  4  speckit.tasks        → <feature_dir>/tasks.md         ← AUTHORITATIVE
-Phase  5  speckit.sdd-orchestrator.route            → tasks.md annotated with →AgentName
-Phase  6  speckit.sdd-orchestrator.implement        → parallel execution by phase
+Phase -1   Knowledge Base   → .codebase/graph.json + knowledge-base.md
+Phase  0   Architecture     → .codebase/architecture-analysis.md
+Phase  1   Discovery        → <feature_dir>/discovery.md
+Phase  1.5 Brainstorm       → <feature_dir>/brainstorm.md   (superpowers:brainstorming)
+Phase  2   speckit.specify  → <feature_dir>/spec.md          ← AUTHORITATIVE
+Phase  3   speckit.plan     → <feature_dir>/plan.md          ← AUTHORITATIVE
+Phase  4   speckit.tasks    → <feature_dir>/tasks.md         ← AUTHORITATIVE
+Phase  5   speckit.sdd-orchestrator.route       → tasks.md annotated with →AgentName
+Phase  6   speckit.sdd-orchestrator.implement   → parallel execution by phase
 ```
+
+Phases -1 through 2 run **inline** inside `speckit.sdd-orchestrator.specify`
+when the user invokes `/speckit.sdd-orchestrator.specify`. The agent produces
+all four pre-spec artifacts (knowledge base, architecture analysis, discovery,
+brainstorm) and injects `brainstorm.md` + `discovery.md` +
+`architecture-analysis.md` into the authoritative `spec.md`.
 
 ---
 
@@ -36,26 +43,29 @@ you must run the **orchestrated** commands this extension registers:
 | `/speckit.implement`| `/speckit.sdd-orchestrator.implement`|
 
 When the user asks to "specify a feature", "create a spec", or types
-`/speckit.specify`:
+`/speckit.sdd-orchestrator.specify`:
 
 1. **Do NOT run the stock `speckit.specify` logic directly.**
-2. Run `/speckit.sdd-orchestrator.specify` (or invoke the
-   `speckit.sdd-orchestrator.specify` agent) with the full feature description.
-3. That command orchestrates Phase -1 → 0 → 1 (each a registered sub-command),
-   then runs the stock `speckit.specify` logic for Phase 2, then fires the
-   `after_specify` hook.
+2. Run the `speckit.sdd-orchestrator.specify` agent with the full feature
+   description. It executes Phases -1 → 0 → 1 → 1.5 → 2 **inline** in the
+   conversation, producing all four artifacts and writing `spec.md`.
+3. **Do NOT start editing code.** This command produces a *specification*, never
+   an implementation. If a phase cannot complete, STOP and report which phase
+   failed — never silently fall back to editing files.
 
-When the user asks to "implement the tasks" or types `/speckit.implement`:
+When the user asks to "implement the tasks" or types
+`/speckit.sdd-orchestrator.implement`:
 
 1. **Do NOT execute tasks sequentially.**
-2. Run `/speckit.sdd-orchestrator.implement` instead. It verifies `→AgentName`
-   routing (running `/speckit.sdd-orchestrator.route` first if needed), then fans
-   out to specialist agents in parallel per phase.
+2. Run the `speckit.sdd-orchestrator.implement` agent. It verifies `→AgentName`
+   routing (running `speckit.sdd-orchestrator.route` first if needed via
+   `EXECUTE_COMMAND:`), then fans out to specialist agents in parallel per phase.
 
-**IMPORTANT:** Launch this workflow through the global `specify` CLI, not a local
-`speckit` binary, so hooks and extension sub-commands resolve correctly. Requires
-Spec-Kit `>=0.8.18` (earlier versions do not wire `after_specify`/`before_specify`
-hooks into the specify command template, so the SDD hooks will silently no-op).
+**Mechanism note (VS Code Copilot Chat):** the orchestrator agents run every
+phase inline. To chain a registered command (a hook or `route`), they emit an
+`EXECUTE_COMMAND: {command}` marker — they never "spawn" external subagents and
+never require a CLI binary. Requires Spec-Kit `>=0.8.18` (earlier versions do not
+wire `before_specify`/`after_specify` into the specify command template).
 
 ---
 

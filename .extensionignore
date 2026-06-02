@@ -1,0 +1,21 @@
+# Files excluded from the installed copy of this extension.
+
+# Version control
+.git/
+.gitignore
+
+# Development and CI
+tests/
+.github/
+
+# Documentation source (README.md is kept)
+CONTRIBUTING.md
+LICENSE
+docs/
+
+# Build artifacts
+__pycache__/
+*.pyc
+dist/
+node_modules/
+

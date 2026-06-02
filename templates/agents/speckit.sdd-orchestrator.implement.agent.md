@@ -1,5 +1,5 @@
 ---
-description: "SDD Orchestrator — Phase 6 Execution. Overrides speckit.implement to route tasks through Squad specialist agents in parallel (phase-by-phase), enforcing TDD and Subagent Driven Development. REPLACES the stock speckit.implement for this project."
+description: "Implement a feature's tasks through the multi-agent SDD pipeline: verifies routing, then executes tasks phase-by-phase via Squad specialist agents in parallel, enforcing TDD and Subagent Driven Development."
 ---
 
 ## User Input
@@ -26,8 +26,10 @@ SDD Orchestrator workflow.
 
 ### 1 — Extension Hooks (before_implement)
 
-Check `.specify/extensions.yml` for `hooks.before_implement` and execute
-per the standard hook protocol.
+Check `.specify/extensions.yml` for `hooks.before_implement`. Filter out hooks
+with `enabled: false`. For each mandatory hook (`optional: false`), emit
+`EXECUTE_COMMAND: {command}` and wait for the result. Announce optional hooks.
+Skip silently if none.
 
 ### 2 — Prerequisites
 
@@ -69,14 +71,14 @@ a `→AgentName` annotation. If any unchecked task lacks one, stop and report:
 
 If routing annotations are present, skip this section.
 
-If routing has NOT been performed yet, run it now:
+If routing has NOT been performed yet, run it now by emitting:
 
 ```
-Spawn: speckit.sdd-orchestrator.route
-Arguments: <FEATURE_DIR>
+EXECUTE_COMMAND: speckit.sdd-orchestrator.route
 ```
 
-Wait for routing to complete before proceeding to execution.
+Wait for routing to complete (tasks.md annotated with `→AgentName`) before
+proceeding to execution.
 
 ---
 
@@ -159,11 +161,9 @@ speckit.sdd-orchestrator.reviewer → speckit.sdd-orchestrator.qa         (when 
 
 After all phases complete:
 
-1. Run `after_implement` hooks:
-
-   ```bash
-   bash .specify/scripts/bash/list-hooks.sh after_implement
-   ```
+1. Run `after_implement` hooks: check `.specify/extensions.yml` for
+   `hooks.after_implement`, and for each mandatory hook emit
+   `EXECUTE_COMMAND: {command}`. Announce optional hooks. Skip silently if none.
 
 2. Output final summary:
 
