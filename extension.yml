@@ -75,6 +75,12 @@ hooks:
     description: "Phase 5 routing + API contract scaffolding after tasks.md is generated"
     condition: null
 
+  after_implement:
+    command: "speckit.sdd-orchestrator.tasks-audit"
+    enabled: true
+    optional: false
+    description: "Audit all tasks after implementation — re-route failures automatically"
+
 tags:
   - "multi-agent"
   - "agents"
