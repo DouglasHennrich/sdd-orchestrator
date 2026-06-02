@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0] - 2026-06-02
+
+### Added
+
+- **`speckit.sdd-orchestrator.api-contract` command.** Detects API-impacting tasks in `tasks.md` (new routes, request/response contract changes, DTO/swagger/openapi updates) and scaffolds `API.md` from the squad template. Assigns endpoint ownership from routing annotations. Runs as a no-op when no API impact is detected.
+- **`speckit.sdd-orchestrator.after-tasks` orchestrator command.** Replaces the single-step `after_tasks` hook with a two-step pipeline: Phase 5 routing (`speckit.sdd-orchestrator.route`) followed by API contract detection (`speckit.sdd-orchestrator.api-contract`). Both steps share the same task-load pass; routing annotations written in Step 1 inform ownership assignment in Step 2.
+- **`after_tasks` hook now points to `speckit.sdd-orchestrator.after-tasks`** instead of `speckit.sdd-orchestrator.route` directly.
+
 ## [1.3.1] - 2026-06-02
 
 ### Fixed
