@@ -60,6 +60,10 @@ provides:
       file: "commands/after-tasks.md"
       description: "after_tasks pipeline: Phase 5 routing followed by API contract detection."
 
+    - name: "speckit.sdd-orchestrator.tasks-audit"
+      file: "commands/tasks-audit.md"
+      description: "Post-implementation audit: verify all tasks, re-route failures, escalate after 3 cycles."
+
 hooks:
   after_specify:
     command: "speckit.sdd-orchestrator.generate"
