@@ -20,3 +20,5 @@
 
 **Coordinator integration:**
 After any speckit implementation batch (phase or full run), automatically spawn `tasks-auditor` in sync mode. If the report contains non-`✅ done` tasks, re-route each failing task to the responsible agent without waiting for user input. Repeat until all tasks pass or coordinator escalates to user after 3 retry cycles.
+
+**Squad agent requirement:** The `tasks-auditor` agent must exist in `.squad/agents/` (as `.squad/agents/tasks-auditor/charter.md` or `.squad/agents/tasks-auditor.md`) before this ceremony runs. If it is absent, the coordinator must emit `EXECUTE_COMMAND: speckit.sdd-orchestrator.generate` to bootstrap all Squad agents (including `tasks-auditor`) before proceeding. The `generate` command is guaranteed to create the agent from the template at `.specify/extensions/sdd-orchestrator/templates/agents/speckit.sdd-orchestrator.tasks-auditor.agent.md`.
