@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0] - 2026-06-02
+
+### Fixed
+
+- **`sdd-init.sh` agora atualiza o bloco `copilot-instructions.md` em re-runs.** Anteriormente, ao detectar o marcador `<!-- SPECKIT-ORCHESTRATOR START -->` existente, o script pulava silenciosamente — o conteúdo nunca era atualizado ao reinstalar. Agora substitui o bloco entre as tags via Python (in-place, sem duplicação), garantindo que upgrades da extensão propaguem as instruções mais recentes.
+- **`route.md` agora atualiza `.squad/routing.md`** com os padrões de keyword → agent inferidos do batch de tasks atual, alinhando ao comportamento do `spec-kit-squad` de referência.
+- **`generate.md` agora atualiza `.github/copilot-instructions.md`** via marcadores HTML (passo 10), espelhando o comportamento da referência.
+- Corrigida referência de `→Next` no agent `route` (`/sdd.implement` → `/speckit.sdd-orchestrator.implement`).
+
 ## [1.2.0] - 2026-06-01
 
 ### Fixed

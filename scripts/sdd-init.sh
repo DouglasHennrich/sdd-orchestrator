@@ -38,6 +38,8 @@ cp -v "$SOURCE_AGENTS"/*.md "$DEST_AGENTS/"
 echo "Copying prompt templates to project .github/prompts..."
 cp -v "$SOURCE_PROMPTS"/*.md "$DEST_PROMPTS/"
 
+# ── copilot-instructions ─────────────────────────────────────────────────────
+# Find the extension's template
 PROJECT_COPILOT="$PROJECT_ROOT/.github/copilot-instructions.md"
 EXTENSION_COPILOT=""
 for candidate in \
@@ -59,15 +61,65 @@ if [[ ! -f "$PROJECT_COPILOT" ]]; then
     cp "$EXTENSION_COPILOT" "$PROJECT_COPILOT"
   fi
 elif [[ -z "$EXTENSION_COPILOT" ]]; then
-  echo "WARNING: Extension copilot-instructions template not found; skipping append."
-elif grep -q '<!-- SPECKIT-ORCHESTRATOR START -->' "$PROJECT_COPILOT" || grep -q '<!-- SPECKIT HOOKS -->' "$PROJECT_COPILOT"; then
-  echo "Project .github/copilot-instructions.md already contains SDD Orchestrator instructions."
+  echo "WARNING: Extension copilot-instructions template not found; skipping update."
 else
-  echo "Appending SDD Orchestrator instructions to project .github/copilot-instructions.md..."
-  printf "\n" >> "$PROJECT_COPILOT"
-  cat "$EXTENSION_COPILOT" >> "$PROJECT_COPILOT"
+  # Replace the blocks between markers if present, otherwise append
+  ORCHESTRATOR_BLOCK=$(sed -n '/<!-- SPECKIT-ORCHESTRATOR START -->/,/<!-- SPECKIT-ORCHESTRATOR END -->/p' "$EXTENSION_COPILOT")
+  HOOKS_BLOCK=$(sed -n '/<!-- SPECKIT HOOKS -->/,/<!-- END SPECKIT HOOKS -->/p' "$EXTENSION_COPILOT")
+
+  if grep -q '<!-- SPECKIT-ORCHESTRATOR START -->' "$PROJECT_COPILOT"; then
+    # Replace ORCHESTRATOR block in-place using Python (portable, handles multiline)
+    python3 - "$PROJECT_COPILOT" "$EXTENSION_COPILOT" <<'PYEOF'
+import sys, re
+
+target_path = sys.argv[1]
+source_path = sys.argv[2]
+
+with open(target_path, 'r') as f:
+    target = f.read()
+with open(source_path, 'r') as f:
+    source = f.read()
+
+def extract_block(text, start_marker, end_marker):
+    pattern = re.compile(
+        re.escape(start_marker) + r'.*?' + re.escape(end_marker),
+        re.DOTALL
+    )
+    m = pattern.search(text)
+    return m.group(0) if m else None
+
+def replace_block(text, start_marker, end_marker, new_block):
+    pattern = re.compile(
+        re.escape(start_marker) + r'.*?' + re.escape(end_marker),
+        re.DOTALL
+    )
+    return pattern.sub(new_block, text)
+
+# Update SPECKIT-ORCHESTRATOR block
+new_orch = extract_block(source, '<!-- SPECKIT-ORCHESTRATOR START -->', '<!-- SPECKIT-ORCHESTRATOR END -->')
+if new_orch:
+    target = replace_block(target, '<!-- SPECKIT-ORCHESTRATOR START -->', '<!-- SPECKIT-ORCHESTRATOR END -->', new_orch)
+
+# Update or append SPECKIT HOOKS block
+new_hooks = extract_block(source, '<!-- SPECKIT HOOKS -->', '<!-- END SPECKIT HOOKS -->')
+if new_hooks:
+    if '<!-- SPECKIT HOOKS -->' in target:
+        target = replace_block(target, '<!-- SPECKIT HOOKS -->', '<!-- END SPECKIT HOOKS -->', new_hooks)
+    else:
+        target = target.rstrip('\n') + '\n\n' + new_hooks + '\n'
+
+with open(target_path, 'w') as f:
+    f.write(target)
+PYEOF
+    echo "Updated SDD Orchestrator blocks in .github/copilot-instructions.md"
+  else
+    echo "Appending SDD Orchestrator instructions to .github/copilot-instructions.md..."
+    printf "\n" >> "$PROJECT_COPILOT"
+    cat "$EXTENSION_COPILOT" >> "$PROJECT_COPILOT"
+  fi
 fi
 
+# ── Squad ────────────────────────────────────────────────────────────────────
 if [[ ! -d "$PROJECT_ROOT/.squad" ]]; then
   echo "No .squad directory found. Initializing Squad..."
   squad init
@@ -75,6 +127,7 @@ else
   echo ".squad directory already exists."
 fi
 
+# ── Multi-Agent SDD Orchestrator doc ────────────────────────────────────────
 if [[ ! -f "$SOURCE_DOC" ]]; then
   echo "ERROR: Multi-Agent SDD Orchestrator document not found: $SOURCE_DOC"
   exit 1

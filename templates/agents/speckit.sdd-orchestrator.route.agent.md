@@ -102,19 +102,28 @@ Flag any phase where ALL tasks go to a single agent (potential bottleneck).
 
 ---
 
+## Update `.squad/routing.md`
+
+After annotating tasks, infer any new keyword → agent patterns from this task
+batch that are not already present in `.squad/routing.md` and append them.
+Do not remove or overwrite existing rules.
+
+---
+
 ## Completion
 
-After updating `tasks.md` with all annotations, output:
+After updating `tasks.md` and `.squad/routing.md`, output:
 
 ```
 ✅ Task Routing complete
    File: <FEATURE_DIR>/tasks.md
    Tasks routed: <N>
+   .squad/routing.md updated
 
 Distribution:
 <workload table>
 
 ⚠ RULE-008 compliance: task content was NOT modified, only →AgentName annotations added.
 
-Next: /sdd.implement to execute all phases in parallel.
+Next: /speckit.sdd-orchestrator.implement — execute tasks phase by phase in parallel.
 ```

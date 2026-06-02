@@ -20,16 +20,17 @@ $ARGUMENTS
 1. **Verify `.squad/` exists** — if not, tell the user to run
    `/speckit.sdd-orchestrator.init` first and stop.
 
-2. **Read the spec** from the active spec directory under `specs/` (e.g.,
-   `specs/001-<name>/spec.md`).
+2. **Read the spec** from the active feature directory (read
+   `.specify/feature.json` → `feature_directory`; fall back to the most
+   recently modified directory under `specs/`).
 
 3. **Read existing agents** from `.squad/agents/` (each agent lives in
    `.squad/agents/{name}/charter.md`) so changes can be diffed rather than
    blindly overwritten.
 
 4. **Analyze the spec** to extract technology domains, architectural concerns,
-   and cross-cutting roles (same logic as `init`). If `$ARGUMENTS` names a
-   specific domain, limit regeneration to that domain's agent.
+   and cross-cutting roles. If `$ARGUMENTS` names a specific domain, limit
+   regeneration to that domain's agent.
 
 5. **Diff against existing agents**:
    - **New domains** found in spec but no matching agent → create new agent
@@ -47,37 +48,50 @@ $ARGUMENTS
    update patterns for changed agents.
 
 8. **Install `list-hooks.sh`** — copy
-    `.specify/extensions/sdd-orchestrator/scripts/bash/list-hooks.sh` to
-    `.specify/scripts/bash/list-hooks.sh` and make it executable (`chmod +x`).
-    Overwrite if it already exists (always keep the latest version from the
-    extension bundle).
+   `.specify/extensions/sdd-orchestrator/scripts/bash/list-hooks.sh` to
+   `.specify/scripts/bash/list-hooks.sh` and make it executable (`chmod +x`).
+   Overwrite if it already exists (always keep the latest version from the
+   extension bundle).
 
-    Print: `✅ Script installed: .specify/scripts/bash/list-hooks.sh`
+   Print: `✅ Script installed: .specify/scripts/bash/list-hooks.sh`
 
-9. **Bootstrap `.squad/ceremonies.md`** — open the file and check whether it
-    already contains the heading `## Speckit Tasks Audit`.
+9. **Bootstrap `.squad/ceremonies.md`** — check whether it already contains
+   the heading `## Speckit Tasks Audit`.
 
-    - **Heading absent** → append the contents of
-      `.specify/extensions/sdd-orchestrator/templates/ceremonies-tasks-auditor.md` to the
-      end of the file. Print:
-      `✅ ceremonies.md patched with Speckit Tasks Audit ceremony`
-    - **Heading present** → skip silently. Print:
-      `ℹ️  ceremonies.md already contains Speckit Tasks Audit — skipping`
+   - **Heading absent** → append the contents of
+     `.specify/extensions/sdd-orchestrator/templates/ceremonies-tasks-auditor.md`.
+     Print: `✅ ceremonies.md patched with Speckit Tasks Audit ceremony`
+   - **Heading present** → skip silently.
+     Print: `ℹ️  ceremonies.md already contains Speckit Tasks Audit — skipping`
 
-    If `.squad/ceremonies.md` does not exist (e.g., user deleted it), create it
-    and write the template content. Print:
-    `✅ ceremonies.md created with Speckit Tasks Audit ceremony`
+   If `.squad/ceremonies.md` does not exist, create it with the template
+   content. Print: `✅ ceremonies.md created with Speckit Tasks Audit ceremony`
 
-10. **Print a diff summary**:
+10. **Update `.github/copilot-instructions.md`** — apply the two SDD Orchestrator
+    blocks using their HTML comment markers as boundaries, replacing the block
+    content if the markers are present, or appending if they are not:
 
-   ```
-   Squad agents updated
-     ✅ Added   : data-engineer (PostgreSQL/migrations — proficient)
-     ✏️  Updated : backend-engineer (added GraphQL capability)
-     ⚠️  Inactive: mobile-engineer (no longer in spec — set to inactive)
-   
-   Routing rules updated: 8 total (2 added, 1 modified)
-   ```
+    - `<!-- SPECKIT-ORCHESTRATOR START -->` … `<!-- SPECKIT-ORCHESTRATOR END -->`
+    - `<!-- SPECKIT HOOKS -->` … `<!-- END SPECKIT HOOKS -->`
+
+    Source: `.specify/extensions/sdd-orchestrator/templates/copilot-instructions.md`
+
+    This ensures the installed project always has the latest orchestration
+    instructions, including the current pipeline phases, entry-point commands,
+    and hook protocol.
+
+    Print: `✅ .github/copilot-instructions.md updated with SDD Orchestrator blocks`
+
+11. **Print a diff summary**:
+
+    ```
+    Squad agents updated
+      ✅ Added   : data-engineer (PostgreSQL/migrations — proficient)
+      ✏️  Updated : backend-engineer (added GraphQL capability)
+      ⚠️  Inactive: mobile-engineer (no longer in spec — set to inactive)
+
+    Routing rules updated: 8 total (2 added, 1 modified)
+    ```
 
 ## Notes
 

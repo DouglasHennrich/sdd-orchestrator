@@ -3,7 +3,7 @@ schema_version: "1.0"
 extension:
   id: "sdd-orchestrator"
   name: "SDD Orchestrator for Spec-kit + Squad + Superpowers"
-  version: "1.2.0"
+  version: "1.3.0"
   description: "Integrates Spec-kit with Squad and Superpowers to orchestrate multi-agent workflows using Spec-Kit artifacts and Squad specialist agents."
   author: "Douglas Hennrich"
   repository: "https://github.com/DouglasHennrich/sdd-orchestrator"
