@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0] - 2026-06-02
+
+### Added
+
+- **Phase 7 — Tasks Audit (post-implementation).** After every implementation batch, the `tasks-auditor` Squad agent automatically audits every task in `tasks.md`, classifying each as `✅ done`, `⚠️ partial`, `❌ missing`, or `🔴 broken`. Failing tasks are re-routed to their `→AgentName` agent automatically, up to 3 retry cycles. Only after 3 consecutive failed cycles does the auditor escalate to the user with a structured report.
+- **`after_implement` hook** in `extension.yml` pointing to `speckit.sdd-orchestrator.tasks-audit`. Triggers automatically when `/speckit.sdd-orchestrator.implement` completes.
+- **`speckit.sdd-orchestrator.tasks-audit` command** (`commands/tasks-audit.md`). Thin orchestrator: verifies the `tasks-auditor` Squad agent exists (triggering `generate` if absent), then delegates the full audit and retry loop to it.
+- **`speckit.sdd-orchestrator.tasks-auditor` agent template** (`templates/agents/speckit.sdd-orchestrator.tasks-auditor.agent.md`). Implements the full audit agenda: resolve FEATURE_DIR, load `tasks.md`, verify each task (file existence, Result pattern, ZodValidationPipe, Presenter, TypeScript validity), classify, produce structured report, and drive the 3-cycle retry loop.
+- **`generate.md` Step 10 — Bootstrap `tasks-auditor` Squad agent.** Every run of `speckit.sdd-orchestrator.generate` now ensures the `tasks-auditor` agent exists in `.squad/agents/`. If absent, it is created from the agent template with `status: active`, `model_tier: proficient`, `domain: audit/qa`.
+- **`ceremonies-tasks-auditor.md` Squad agent requirement directive.** Documents that `tasks-auditor` must exist in `.squad/agents/` before the ceremony runs, and that the coordinator must trigger `generate` to bootstrap it if absent.
+- **RULE-017** added to `Multi-Agent SDD Orchestrator.md`: after every implementation batch, `tasks-auditor` must verify all tasks before the workflow is considered complete.
+- **`Multi-Agent SDD Orchestrator.md` updated** to reflect all current phases (-1 through 7), hooks, workflow diagram, Phase 7 section, and updated Success Criteria.
+
 ## [1.4.0] - 2026-06-02
 
 ### Added
