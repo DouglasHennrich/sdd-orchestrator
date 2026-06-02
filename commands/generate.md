@@ -67,7 +67,32 @@ $ARGUMENTS
    If `.squad/ceremonies.md` does not exist, create it with the template
    content. Print: `✅ ceremonies.md created with Speckit Tasks Audit ceremony`
 
-10. **Update `.github/copilot-instructions.md`** — apply the two SDD Orchestrator
+10. **Bootstrap `tasks-auditor` Squad agent** — check whether
+    `.squad/agents/tasks-auditor/charter.md` or `.squad/agents/tasks-auditor.md`
+    exists.
+
+    - **Absent** → create the agent at `.squad/agents/tasks-auditor/charter.md`
+      with the following front matter and content sourced from
+      `.specify/extensions/sdd-orchestrator/templates/agents/speckit.sdd-orchestrator.tasks-auditor.agent.md`:
+
+      ```yaml
+      name: tasks-auditor
+      status: active
+      model_tier: proficient
+      domain: audit/qa
+      description: >
+        Post-implementation task auditor. Classifies every task in tasks.md
+        as done/partial/missing/broken and re-routes failures to responsible
+        agents. Escalates to the user after 3 retry cycles.
+      ```
+
+      Append the full agent template content after the front matter.
+      Print: `✅ Agent created: .squad/agents/tasks-auditor`
+
+    - **Present** → skip silently.
+      Print: `ℹ️  tasks-auditor agent already exists — skipping`
+
+11. **Update `.github/copilot-instructions.md`** — apply the two SDD Orchestrator
     blocks using their HTML comment markers as boundaries, replacing the block
     content if the markers are present, or appending if they are not:
 
@@ -82,7 +107,7 @@ $ARGUMENTS
 
     Print: `✅ .github/copilot-instructions.md updated with SDD Orchestrator blocks`
 
-11. **Print a diff summary**:
+12. **Print a diff summary**:
 
     ```
     Squad agents updated
