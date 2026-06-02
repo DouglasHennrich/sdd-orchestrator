@@ -1,17 +1,15 @@
 ---
-description: "tasks-audit — post-implementation audit pipeline: verifies tasks-auditor Squad agent exists, then delegates full audit and retry loop to it."
+description: "tasks-audit — post-implementation audit pipeline: verifies every task in tasks.md, classifies status, re-routes failures to responsible agents (up to 3 cycles), and escalates to the user if tasks still fail."
 ---
 
 # SDD Orchestrator — Tasks Audit
 
-Runs the post-implementation audit pipeline:
+Audits every task in `tasks.md` after an implementation batch. Classifies each task,
+re-routes failures to their assigned agents automatically, and escalates to the user
+only after 3 failed retry cycles.
 
-1. Verifies the `tasks-auditor` Squad agent exists in `.squad/agents/`.
-2. If absent, triggers agent generation via `speckit.sdd-orchestrator.generate`.
-3. Delegates the full audit, classification, retry loop, and escalation logic
-   to the `tasks-auditor` Squad agent.
-
-This command is triggered automatically by the `after_implement` hook.
+This command is triggered automatically by the `after_implement` hook and can also
+be run directly: `/speckit.sdd-orchestrator.tasks-audit`.
 
 ## User Input
 
@@ -19,9 +17,9 @@ This command is triggered automatically by the `after_implement` hook.
 $ARGUMENTS
 ```
 
-## Steps
+---
 
-### Step 1 — Verify tasks-auditor Squad agent exists
+## Step 1 — Verify tasks-auditor Squad agent exists
 
 Check whether either of the following paths exists:
 - `.squad/agents/tasks-auditor/charter.md`
@@ -29,31 +27,134 @@ Check whether either of the following paths exists:
 
 **If found:** proceed to Step 2.
 
-**If NOT found:**
+**If NOT found:** emit the following and wait for it to complete before continuing:
 
-Emit:
 ```
 EXECUTE_COMMAND: speckit.sdd-orchestrator.generate
 ```
 
-Wait for `generate` to complete. Confirm the agent now exists before continuing.
-If it still does not exist after `generate` completes, report the failure and stop:
+After `generate` completes, confirm the agent now exists. If it still does not exist,
+report and stop:
 
-> "tasks-auditor Squad agent could not be created. Check that
+> "tasks-auditor Squad agent could not be created. Verify that
 > `.specify/extensions/sdd-orchestrator/templates/agents/speckit.sdd-orchestrator.tasks-auditor.agent.md`
 > exists and re-run `/speckit.sdd-orchestrator.generate`."
 
-### Step 2 — Delegate to tasks-auditor Squad agent
+---
 
-Run the `tasks-auditor` Squad agent by emitting:
+## Step 2 — Resolve FEATURE_DIR
+
+Read `.specify/feature.json`. Extract `feature_directory` as FEATURE_DIR.
+If the file is missing, fall back to the most recently modified directory under `specs/`.
+
+---
+
+## Step 3 — Load tasks.md
+
+Read `{FEATURE_DIR}/tasks.md`. Parse every task (both checked `[x]` and unchecked `[ ]`).
+For each task, extract: task ID, description, phase, `→AgentName` annotation, and any
+acceptance criteria listed below the task.
+
+If all tasks are already `[x]` and no unchecked tasks remain, print:
 
 ```
-EXECUTE_COMMAND: speckit.sdd-orchestrator.tasks-auditor
+✅ Tasks Audit — nothing to audit (all tasks already checked)
 ```
 
-The agent handles the full audit cycle:
-- Reads `.specify/feature.json` → resolves FEATURE_DIR
-- Loads `{FEATURE_DIR}/tasks.md`
-- Classifies every task: ✅ done | ⚠️ partial | ❌ missing | 🔴 broken
-- Re-routes failing tasks to their `→AgentName` agents (up to 3 cycles)
-- Escalates to the user if tasks still fail after 3 cycles
+and stop.
+
+---
+
+## Step 4 — Verify each task
+
+For each task, check all of the following:
+
+| Check | How to verify |
+|-------|--------------|
+| File existence | Every file path mentioned in the task description or acceptance criteria exists on disk |
+| Result pattern | Service methods return `Result<T>` — no raw `throw` in the service layer |
+| ZodValidationPipe | DTOs use Zod schema + `validateDto` (not `class-validator`) |
+| Presenter usage | Response data passes through a Presenter before leaving the controller |
+| TypeScript validity | Run `npx tsc --noEmit` — zero errors attributable to this task's files |
+
+---
+
+## Step 5 — Classify every task
+
+| Status | Criteria |
+|--------|----------|
+| `✅ done` | All checks pass; all acceptance criteria met; tests pass |
+| `⚠️ partial` | File(s) exist but at least one check fails (missing Result pattern, ZodValidationPipe, Presenter, or TS error) |
+| `❌ missing` | No implementation file was created for this task |
+| `🔴 broken` | File(s) exist but cause compile errors or test failures |
+
+---
+
+## Step 6 — Produce structured audit report
+
+```
+Tasks Audit Report — {FEATURE_DIR}
+─────────────────────────────────────────────────────────────────────────
+Task    Status       Agent               Issue
+─────────────────────────────────────────────────────────────────────────
+T001    ✅ done      →backend
+T002    ⚠️ partial   →backend            Missing ZodValidationPipe in DTO
+T007    ❌ missing   →qa                 No test file found
+T013    🔴 broken    →database           TypeScript error in migration file
+─────────────────────────────────────────────────────────────────────────
+Passed: N / N total   Cycle: N/3
+```
+
+If **all tasks are `✅ done`**, print the success summary (see Completion) and stop.
+
+If **any task is not `✅ done`**, proceed to the Retry Loop.
+
+---
+
+## Retry Loop
+
+**Maximum cycles: 3.** The cycle counter increments each time a re-route pass is issued.
+
+### On each cycle with failing tasks:
+
+1. For each non-`✅` task, dispatch its assigned agent inline by emitting:
+   ```
+   EXECUTE_COMMAND: {→AgentName} {task ID} {task description} {issue}
+   ```
+   Wait for each agent to complete before proceeding.
+2. Re-run Steps 3–6 from scratch (full re-audit — not incremental — so regressions are caught).
+3. Increment cycle counter.
+4. If all tasks are now `✅` → print success summary (see Completion) and stop.
+5. If cycle counter reaches 3 and tasks still fail → escalate to user (see Escalation).
+
+### Escalation after 3 cycles
+
+```
+⚠️ Tasks Audit — Escalation Required
+
+After 3 retry cycles, the following tasks still have not passed:
+
+Task    Status       Agent               Issue
+─────────────────────────────────────────────────────────────────────────
+<failing tasks listed here>
+─────────────────────────────────────────────────────────────────────────
+
+Manual intervention required. Suggested actions:
+- Review the task description and acceptance criteria in tasks.md
+- Check the agent's implementation files for the listed issues
+- Re-run /speckit.sdd-orchestrator.implement for the specific tasks
+```
+
+---
+
+## Completion (all tasks pass)
+
+```
+✅ Tasks Audit complete
+
+Tasks audited : <N>
+Passed        : <N>
+Re-routed     : <N> (across <N> cycles)
+
+All tasks verified — implementation batch complete.
+```

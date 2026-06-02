@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.1] - 2026-06-02
+
+### Fixed
+
+- **`tasks-audit` command now executes inline instead of delegating via `EXECUTE_COMMAND:`.**
+  The previous implementation emitted `EXECUTE_COMMAND: speckit.sdd-orchestrator.tasks-auditor`
+  to delegate audit logic to the Squad agent — but when the command is invoked directly by the
+  user (not via a hook), there is no orchestrator listening to process that marker, so execution
+  stopped after printing the `EXECUTE_COMMAND:` line. The full audit agenda (resolve FEATURE_DIR,
+  load tasks.md, verify, classify, produce report, retry loop, escalation) is now embedded
+  directly in `commands/tasks-audit.md`, matching the inline execution pattern used by
+  `speckit.sdd-orchestrator.implement`.
+
 ## [1.5.0] - 2026-06-02
 
 ### Added
