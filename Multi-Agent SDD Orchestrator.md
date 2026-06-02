@@ -22,6 +22,7 @@ The objective is to create a complete Spec-Driven Development workflow capable o
 8. Routing tasks to specialized agents
 9. Executing tasks using Subagent Driven Development
 10. Executing implementation through Test Driven Development
+11. Auditing completed tasks and re-routing failures automatically
 
 ---
 
@@ -76,33 +77,44 @@ Responsible for orchestration and execution.
 ```text
 User Request
         ↓
-Codebase Architect
+[Phase -1] Codebase Index (knowledge graph)
+        ↓
+[Phase 0] Codebase Architect
         ↓
 architecture-analysis.md
         ↓
-Superpowers Discovery
+[Phase 1] Superpowers Discovery
         ↓
 discovery.md
         ↓
-Spec-Kit Specify
+[Phase 1.5] Superpowers Brainstorm
         ↓
-spec.md
+brainstorm.md
         ↓
-Spec-Kit Plan
+[Phase 2] Spec-Kit Specify
+        ↓
+spec.md  ←  hook: after_specify → generate (Squad agents + tasks-auditor + copilot-instructions)
+        ↓
+[Phase 3] Spec-Kit Plan
         ↓
 plan.md
         ↓
-Spec-Kit Tasks
+[Phase 4] Spec-Kit Tasks
         ↓
-tasks.md
+tasks.md  ←  hook: after_tasks → route (→AgentName annotations) + API contract detection
         ↓
-Squad Routing
+[Phase 5] Squad Routing (→AgentName annotations in tasks.md)
         ↓
-task-routing.yaml
+[Phase 6] Squad Execution (parallel, phase-by-phase, TDD + SDD)
         ↓
-Squad Execution
+Implementation  ←  hook: after_implement → tasks-auditor (audit + retry up to 3 cycles)
         ↓
-Implementation
+[Phase 7] Tasks Audit (classify: ✅ done | ⚠️ partial | ❌ missing | 🔴 broken)
+        ↓
+All tasks ✅  →  Done
+Any task fails  →  Re-route to responsible agent  →  retry (max 3 cycles)
+        ↓
+Escalate to user if still failing after 3 cycles
 ```
 
 ---
@@ -410,7 +422,7 @@ Rules:
 
 Trigger:
 
-/speckit.implement
+/speckit.sdd-orchestrator.implement
 
 Framework:
 
@@ -418,16 +430,84 @@ Squad
 
 Purpose:
 
-Execute routed work.
+Execute routed work phase-by-phase with parallel specialist agents, enforcing TDD and SDD.
 
 Inputs:
 
 * spec.md
 * plan.md
-* tasks.md
-* task-routing.yaml
+* tasks.md (with →AgentName routing annotations)
 
-Squad becomes the execution orchestrator.
+Squad becomes the execution orchestrator. Tasks are dispatched in parallel per phase.
+Each phase must complete before the next begins.
+
+Hook (automatic after all phases complete):
+
+after_implement → speckit.sdd-orchestrator.tasks-audit
+
+---
+
+# Phase 7 - Tasks Audit
+
+Trigger:
+
+Automatically after Phase 6 via the after_implement hook.
+
+Framework:
+
+Squad (tasks-auditor agent)
+
+Purpose:
+
+Verify every task in tasks.md was correctly implemented. Re-route failures automatically.
+Escalate to the user only after 3 failed retry cycles.
+
+Inputs:
+
+* .specify/feature.json → resolves FEATURE_DIR
+* {FEATURE_DIR}/tasks.md
+
+Responsibilities:
+
+* Verify file existence for each task
+* Verify Result<T> pattern in service layer
+* Verify ZodValidationPipe usage in DTOs
+* Verify Presenter usage in controllers
+* Verify TypeScript validity (npx tsc --noEmit)
+* Classify each task: ✅ done | ⚠️ partial | ❌ missing | 🔴 broken
+* Re-route failing tasks to their →AgentName agents
+* Repeat audit after each re-route pass (full re-audit, not incremental)
+* Escalate to user after 3 consecutive failed cycles
+
+Retry Loop Invariant:
+
+The cycle counter resets only when ALL tasks pass.
+Each cycle re-audits the full tasks.md from scratch so regressions are caught.
+
+Output:
+
+Structured audit report:
+
+```
+Tasks Audit Report — {FEATURE_DIR}
+─────────────────────────────────────────────────────────────────────────
+Task    Status       Agent               Issue
+─────────────────────────────────────────────────────────────────────────
+T001    ✅ done      →backend
+T002    ⚠️ partial   →backend            Missing ZodValidationPipe in DTO
+T007    ❌ missing   →qa                 No test file found
+T013    🔴 broken    →database           TypeScript error in migration file
+─────────────────────────────────────────────────────────────────────────
+Passed: N / N total   Cycle: N/3
+```
+
+Rules:
+
+* tasks-auditor does NOT implement tasks — it only audits and re-routes.
+* tasks-auditor does NOT modify tasks.md structure.
+* tasks-auditor does NOT run if all tasks are already [x] (nothing to audit).
+* tasks-auditor must exist in .squad/agents/ before running. If absent, the
+  coordinator runs speckit.sdd-orchestrator.generate to bootstrap it.
 
 ---
 
@@ -564,6 +644,12 @@ RULE-016
 
 No agent may bypass any workflow phase.
 
+RULE-017
+
+After every implementation batch, tasks-auditor must verify all tasks before the
+workflow is considered complete. Non-passing tasks must be re-routed automatically
+up to 3 cycles before escalating to the user.
+
 ---
 
 # Success Criteria
@@ -572,10 +658,10 @@ A successful workflow must produce:
 
 * architecture-analysis.md
 * discovery.md
+* brainstorm.md
 * spec.md
 * plan.md
-* tasks.md
-* task-routing.yaml
+* tasks.md (all tasks checked [x] and verified ✅ by tasks-auditor)
 
 and a fully implemented feature following:
 
@@ -584,5 +670,6 @@ and a fully implemented feature following:
 * Test Driven Development
 * Subagent Driven Development
 * Multi-Agent Execution
+* Post-Implementation Audit (tasks-auditor verifies every task)
 
 while preserving a single source of truth and strict separation of responsibilities.
