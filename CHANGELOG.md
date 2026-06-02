@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1] - 2026-06-02
+
+### Fixed
+
+- **`/speckit.sdd-orchestrator.init` agora executa o `sdd-init.sh` completo.** O command body anterior descrevia o comportamento como prosa de documentação — o modelo lia como "o que este comando faz", não como "o que você deve fazer agora", e por isso não rodava o script nem atualizava o `copilot-instructions.md`. Reescrito com passos imperativos e `bash .specify/extensions/sdd-orchestrator/scripts/sdd-init.sh` como passo central explícito. Também corrigido o path do script (era `.specify/scripts/sdd-init.sh` — inexistente).
+
 ## [1.3.0] - 2026-06-02
 
 ### Fixed
