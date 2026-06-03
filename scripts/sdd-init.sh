@@ -140,4 +140,76 @@ else
   echo "Multi-Agent SDD Orchestrator document already in place; skipping copy."
 fi
 
+# ── Monorepo scope patch: create-new-feature.sh ─────────────────────────────
+GIT_SCRIPT="$PROJECT_ROOT/.specify/extensions/git/scripts/bash/create-new-feature.sh"
+
+if [[ ! -f "$GIT_SCRIPT" ]]; then
+  echo "ERROR: $GIT_SCRIPT not found."
+  echo "The sdd-orchestrator monorepo scope feature requires the spec-kit git extension."
+  echo "Install it with: speckit extension add git"
+  exit 1
+fi
+
+if grep -q "# SDD-ORCHESTRATOR-SCOPE-PATCH" "$GIT_SCRIPT"; then
+  echo "[sdd-orchestrator] Scope patch already applied to create-new-feature.sh; skipping."
+else
+  # a) Add idempotency marker after shebang line
+  sed -i.bak '1s|^#!/usr/bin/env bash|#!/usr/bin/env bash\n# SDD-ORCHESTRATOR-SCOPE-PATCH|' "$GIT_SCRIPT"
+
+  # b) Add SCOPE="" variable declaration after the USE_TIMESTAMP=false line
+  sed -i.bak 's|^USE_TIMESTAMP=false$|USE_TIMESTAMP=false\nSCOPE=""|' "$GIT_SCRIPT"
+
+  # c) Add --scope flag parsing inside the while loop, after the --timestamp case block.
+  #    We append it after the line that sets USE_TIMESTAMP=true (end of --timestamp block).
+  sed -i.bak '/USE_TIMESTAMP=true/{n;n;s|^        ;;$|        ;;\n        --scope)\n            if \[ $((i + 1)) -gt $# \]; then\n                echo '"'"'Error: --scope requires a value'"'"' >\&2\n                exit 1\n            fi\n            i=$((i + 1))\n            next_arg="${!i}"\n            if \[\[ "$next_arg" == --* \]\]; then\n                echo '"'"'Error: --scope requires a value'"'"' >\&2\n                exit 1\n            fi\n            SCOPE="$next_arg"\n            ;;\n|}' "$GIT_SCRIPT"
+
+  # d) Replace BRANCH_SUFFIX construction block (the if/elif/else that currently
+  #    uses SHORT_NAME and generate_branch_name) with the scope-aware version.
+  #    We use Python for this multi-line replacement (portable, no GNU sed needed).
+  python3 - "$GIT_SCRIPT" <<'PYEOF'
+import sys, re
+
+path = sys.argv[1]
+with open(path, 'r') as f:
+    content = f.read()
+
+old = (
+    r'    if \[ -n "\$SHORT_NAME" \]; then\n'
+    r'        BRANCH_SUFFIX=\$\(clean_branch_name "\$SHORT_NAME"\)\n'
+    r'    else\n'
+    r'        BRANCH_SUFFIX=\$\(generate_branch_name "\$FEATURE_DESCRIPTION"\)\n'
+    r'    fi'
+)
+new = (
+    '    if [ -n "$SCOPE" ] && [ -n "$SHORT_NAME" ]; then\n'
+    '        BRANCH_SUFFIX="${SCOPE}-$(clean_branch_name "$SHORT_NAME")"\n'
+    '    elif [ -n "$SHORT_NAME" ]; then\n'
+    '        BRANCH_SUFFIX=$(clean_branch_name "$SHORT_NAME")\n'
+    '    else\n'
+    '        BRANCH_SUFFIX=$(generate_branch_name "$FEATURE_DESCRIPTION")\n'
+    '    fi'
+)
+
+updated = re.sub(old, new, content)
+if updated == content:
+    # Fallback: try without backslash escaping (plain literal match)
+    old_plain = (
+        '    if [ -n "$SHORT_NAME" ]; then\n'
+        '        BRANCH_SUFFIX=$(clean_branch_name "$SHORT_NAME")\n'
+        '    else\n'
+        '        BRANCH_SUFFIX=$(generate_branch_name "$FEATURE_DESCRIPTION")\n'
+        '    fi'
+    )
+    updated = content.replace(old_plain, new)
+
+with open(path, 'w') as f:
+    f.write(updated)
+PYEOF
+
+  # Clean up sed backup files
+  rm -f "${GIT_SCRIPT}.bak"
+
+  echo "[sdd-orchestrator] Scope patch applied to create-new-feature.sh."
+fi
+
 echo "SDD Orchestrator initialization complete."
