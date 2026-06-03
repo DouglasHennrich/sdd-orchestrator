@@ -5,10 +5,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 EXTENSION_ROOT="$(cd "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
 PROJECT_ROOT="$(pwd)"
 
-SOURCE_AGENTS="$EXTENSION_ROOT/templates/agents"
-SOURCE_PROMPTS="$EXTENSION_ROOT/templates/prompts"
-DEST_AGENTS="$PROJECT_ROOT/.github/agents"
-DEST_PROMPTS="$PROJECT_ROOT/.github/prompts"
 DEST_DOC="$EXTENSION_ROOT/Multi-Agent SDD Orchestrator.md"
 
 if [[ -f "$EXTENSION_ROOT/Multi-Agent SDD Orchestrator.md" ]]; then
@@ -18,25 +14,6 @@ elif [[ -f "$EXTENSION_ROOT/../Multi-Agent SDD Orchestrator.md" ]]; then
 else
   SOURCE_DOC=""
 fi
-
-if [[ ! -d "$SOURCE_AGENTS" ]]; then
-  echo "ERROR: Agents source not found: $SOURCE_AGENTS"
-  exit 1
-fi
-
-if [[ ! -d "$SOURCE_PROMPTS" ]]; then
-  echo "ERROR: Prompts source not found: $SOURCE_PROMPTS"
-  exit 1
-fi
-
-mkdir -p "$DEST_AGENTS"
-mkdir -p "$DEST_PROMPTS"
-
-echo "Copying agent definitions to project .github/agents..."
-cp -v "$SOURCE_AGENTS"/*.md "$DEST_AGENTS/"
-
-echo "Copying prompt templates to project .github/prompts..."
-cp -v "$SOURCE_PROMPTS"/*.md "$DEST_PROMPTS/"
 
 # ── copilot-instructions ─────────────────────────────────────────────────────
 # Find the extension's template

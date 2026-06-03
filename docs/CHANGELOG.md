@@ -1,5 +1,59 @@
 # Changelog
 
+## [1.8.0] - 2026-06-03
+
+### Changed
+
+- **Agent intelligence consolidated into `commands/`.** All orchestrator agent logic that
+  previously lived in `templates/agents/` has been merged directly into the corresponding
+  `commands/` files. The spec-kit extension mechanism installs `commands/` as agents in the
+  target project automatically — the separate `templates/agents/` directory was a manual
+  duplication of that work and has been removed.
+
+- **`commands/discovery.md`**: replaced thin wrapper with the full Discovery Protocol
+  (8 categories: Assumptions, Missing Requirements, Edge Cases, Failure Scenarios, Security
+  OWASP lens, Scalability, Operational, Architectural Conflicts), structured output format,
+  severity tagging, and completion summary.
+
+- **`commands/route.md`**: merged Routing Rules table (6 specialist agents), classification
+  hints, annotation format, Phase Balance Check, and RULE-008 compliance output from the
+  former agent template. Steps are now both operationally prescriptive and rule-based.
+
+- **`commands/orchestrate-specify.md`**: replaced thin wrapper with the complete pipeline
+  specification — Pre-Execution hooks, Phase -1 through Phase 2 with all staleness checks,
+  Scope Inference table, brainstorm integration, and Post-Execution hooks. `handoffs`
+  frontmatter preserved.
+
+- **`commands/codebase-index.md`**: replaced thin wrapper with the full Staleness Check
+  protocol, 8-category Scan Protocol, and structured JSON + Markdown output format
+  definitions.
+
+- **`commands/codebase-architect.md`**: replaced thin wrapper with the full Analysis
+  Protocol (6 sections: Existing Implementations, Reuse Opportunities, Architectural
+  Constraints, Integration Points, Potential Conflicts, Architectural Gaps) and structured
+  `architecture-analysis.md` output format.
+
+- **`commands/orchestrate-implement.md`**: replaced thin wrapper with the complete SDD
+  Execution Orchestrator — Pre-Execution Checks, TDD Enforcement sequence, Phase-by-Phase
+  Parallel Dispatch algorithm, Subagent Delegation examples, and after_implement hooks.
+
+- **`commands/tasks-audit.md`**: added `Identity` block clarifying the auditor's scope
+  and constraints (audits and re-routes only — does not implement).
+
+### Removed
+
+- **`templates/agents/`** directory and all 7 agent files
+  (`speckit.sdd-orchestrator.discovery`, `tasks-auditor`, `route`, `specify`,
+  `codebase-index`, `codebase-architect`, `implement`). Their content now lives in the
+  corresponding `commands/` files.
+
+- **`templates/prompts/`** directory and all 6 prompt stub files.
+
+- **`sdd-init.sh` manual copy block.** Removed the variables (`SOURCE_AGENTS`,
+  `SOURCE_PROMPTS`, `DEST_AGENTS`, `DEST_PROMPTS`), directory existence checks, `mkdir`,
+  and `cp` calls that copied agent/prompt templates into the target project. The spec-kit
+  extension mechanism handles this automatically via `extension.yml` `provides.commands`.
+
 ## [1.6.0] - 2026-06-03
 
 ### Changed
