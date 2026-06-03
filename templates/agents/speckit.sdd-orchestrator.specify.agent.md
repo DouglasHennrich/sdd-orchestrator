@@ -60,6 +60,9 @@ EXECUTE_COMMAND: {command}
 
 and wait for its result before continuing (this is typically the git extension
 creating the feature branch). Announce optional hooks and let the user decide.
+When emitting `EXECUTE_COMMAND: speckit.git.feature`, append the inferred
+scope and a short name: `EXECUTE_COMMAND: speckit.git.feature --scope {FEATURE_SCOPE} {feature-short-name}`
+(e.g., `EXECUTE_COMMAND: speckit.git.feature --scope front add-login-form`).
 If the file is missing or unparseable, skip silently.
 
 ---
@@ -94,6 +97,29 @@ Points**, **Architectural Constraints**, Architectural Gaps, and a Verdict.
 
 Cite specific module names, file paths, and table names. Report:
 `Phase 0 ✓ .codebase/architecture-analysis.md`.
+
+### Scope Inference
+
+After writing `architecture-analysis.md`, determine which workspace packages
+(`backoffice`, `front`, `mobile`) will be touched by this feature. Apply this
+mapping to set `FEATURE_SCOPE`:
+
+| Packages affected | FEATURE_SCOPE |
+|---|---|
+| backoffice + front + mobile (all three) | `monorepo` |
+| backoffice + front | `backoffice-front` |
+| backoffice + mobile | `backoffice-mobile` |
+| front + mobile | `front-mobile` |
+| backoffice only | `backoffice` |
+| front only | `front` |
+| mobile only | `mobile` |
+
+Log the result:
+```
+[sdd-orchestrator] Inferred scope: {FEATURE_SCOPE} (packages: {list})
+```
+
+Carry `FEATURE_SCOPE` forward — it is used in the before_specify hook below.
 
 ---
 
