@@ -1,11 +1,11 @@
 ---
-description: "Phase 5 — route open tasks to specialist agents by capability matching and annotate tasks.md + update .squad/routing.md."
+description: "Phase 5 — route open tasks to Squad agents by capability matching and annotate tasks.md + update .squad/routing.md."
 ---
 
 # SDD Orchestrator — Route Tasks (Phase 5)
 
 Read open tasks from `tasks.md` and assign each to the most appropriate
-specialist execution agent. Annotates `tasks.md` with `→AgentName` and updates
+Squad agent. Annotates `tasks.md` with `→AgentName` and updates
 `.squad/routing.md` with any new patterns.
 
 This command is triggered automatically by the `after_tasks` hook.
@@ -25,10 +25,14 @@ $ARGUMENTS
      `/speckit.tasks` first and stop.
    - `.squad/` must exist; if not, tell the user to run
      `/speckit.sdd-orchestrator.init` first and stop.
+   - At least one active agent must exist in `.squad/agents/`; if not, tell the
+     user to run `/speckit.sdd-orchestrator.generate` first and stop.
 
 2. **Load Squad agents and routing rules** from `.squad/`:
    - Read each agent from `.squad/agents/{name}/charter.md` (or
      `.squad/agents/{name}.md`). Only consider agents with `status: active`.
+   - For each agent, extract its name and capability keywords from the
+     `capabilities` array in its charter.
    - Read `.squad/routing.md` for existing keyword → agent mappings.
 
 3. **Read open tasks** from `<FEATURE_DIR>/tasks.md`. Parse each unchecked
@@ -38,25 +42,19 @@ $ARGUMENTS
 
 4. **Map tasks to agents** (capability-match strategy):
 
-   | Agent | Domain keywords |
-   | ----- | --------------- |
-   | `speckit.sdd-orchestrator.backend`  | service, controller, module, DTO, NestJS, endpoint, API, business logic |
-   | `speckit.sdd-orchestrator.database` | entity, migration, repository, query, schema, table, relation, TypeORM |
-   | `speckit.sdd-orchestrator.security` | auth, guard, permission, OWASP, validation, sanitization, JWT, RBAC |
-   | `speckit.sdd-orchestrator.qa`       | test, spec, factory, coverage, E2E, unit, integration, jest |
-   | `speckit.sdd-orchestrator.infra`    | Docker, CI/CD, env, pipeline, deploy, config, secrets |
-   | `speckit.sdd-orchestrator.reviewer` | review, audit, acceptance, sign-off, checklist |
-
-   - Extract domain keywords from the task title and description.
-   - Match against the agent capability table above AND against existing rules
+   - Extract domain keywords from each task title and description.
+   - Match against the Squad agents loaded in Step 2 AND against existing rules
      in `.squad/routing.md`.
    - If multiple agents match, prefer the one with the highest specificity match.
-   - If no agent matches, assign `speckit.sdd-orchestrator.backend` as default
-     and flag it with `⚠️ no direct match`.
+   - If no agent matches a task, do NOT assign a fallback — instead flag the
+     task with `⚠️ no agent match` and instruct the user to run
+     `/speckit.sdd-orchestrator.generate` so a new Squad agent covering that
+     domain is created before retrying.
 
-5. **Annotate `tasks.md`**: For each task, append `→AgentName` after the task
-   description if not already present, or replace the existing annotation.
-   Format: `- [ ] T001 [P] Description →speckit.sdd-orchestrator.backend`
+5. **Annotate `tasks.md`**: For each matched task, append `→AgentName` after
+   the task description if not already present, or replace the existing
+   annotation. Use the Squad agent's name exactly as defined in its charter.
+   Format: `- [ ] T001 [P] Description →Jorge`
 
 6. **Output a routing table**:
 
@@ -65,12 +63,12 @@ $ARGUMENTS
    ─────────────────────────────────────────────────────────────────────────
    Task    Description                              Agent               Phase
    ─────────────────────────────────────────────────────────────────────────
-   T001    Create editable-model entity             →database           2
-   T002    Implement update service logic           →backend            3
-   T003    Add auth guard for platform templates    →security           3
-   T004    Write unit tests for service             →qa                 3
+   T001    Create editable-model entity             →Jorge              2
+   T002    Implement update service logic           →Jorge              3
+   T003    Add auth guard for platform templates    →Ana                3
+   T004    Write unit tests for service             →Carlos             3
    ─────────────────────────────────────────────────────────────────────────
-   Routed: N / N total   ⚠️ Needs review: N
+   Routed: N / N total   ⚠️ No agent match: N
    ```
 
 7. **Update `.squad/routing.md`**: Add any new keyword → agent mappings inferred
@@ -83,6 +81,7 @@ $ARGUMENTS
    ✅ Route complete
       tasks.md annotated: <N> tasks
       .squad/routing.md updated
+      ⚠️  <N> tasks need manual assignment — run /speckit.sdd-orchestrator.generate
 
    Next: /speckit.sdd-orchestrator.implement — execute tasks by phase
    ```

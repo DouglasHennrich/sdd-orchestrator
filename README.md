@@ -9,10 +9,11 @@
 
 ## What it does
 
-- Adds `.github/agents` definitions for custom SDD routing and execution agents
-- Configures an `after_tasks` hook that runs `sdd.route` after `/speckit.tasks`
-- Enables task annotation with `→AgentName` for specialist agent execution
-- Integrates Spec-Kit, Squad, and Superpowers workflows in a single orchestrated extension
+- Orchestrates the full SDD pipeline (phases -1 through 7) bridging Spec-Kit, Squad, and Superpowers
+- Configures `after_tasks` / `after_specify` / `after_implement` hooks for automatic routing, agent generation, and task auditing
+- Routes tasks exclusively to real Squad agents defined in `.squad/agents/` — no hardcoded domain-role agents
+- Enables task annotation with `→AgentName` where `AgentName` is the actual Squad agent (e.g. `Jorge`, `backend-engineer`)
+- Generates and maintains Squad agent definitions via `generate` as the spec evolves
 
 ## Requirements
 
@@ -31,7 +32,7 @@ specify extension add --dev /path/to/sdd-orchestrator
 For published releases, install from the release archive URL:
 
 ```bash
-specify extension add sdd-orchestrator --from https://github.com/DouglasHennrich/sdd-orchestrator/archive/refs/tags/v1.3.1.zip
+specify extension add sdd-orchestrator --from https://github.com/DouglasHennrich/sdd-orchestrator/archive/refs/tags/v1.6.0.zip
 ```
 
 ## Usage

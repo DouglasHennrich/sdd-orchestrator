@@ -21,8 +21,8 @@ in the conversation:
 1. Processes `before_implement` hooks via `EXECUTE_COMMAND:` markers.
 2. Verifies `tasks.md` has `→AgentName` routing annotations — if not, runs
    `speckit.sdd-orchestrator.route` (via `EXECUTE_COMMAND:`) first.
-3. Executes tasks phase-by-phase, dispatching the specialist execution agents
-   (backend, database, security, qa, infra, reviewer) in parallel per phase.
+3. Executes tasks phase-by-phase, dispatching the Squad agents assigned via
+   `→AgentName` annotations in `tasks.md` in parallel per phase.
    Every agent follows Test Driven Development (RULE-012).
 4. Processes `after_implement` hooks via `EXECUTE_COMMAND:` markers.
 

@@ -513,16 +513,21 @@ Rules:
 
 # Execution Agents
 
-Supported agents:
+Execution agents are Squad agents — defined per-project in `.squad/agents/` and generated
+by `speckit.sdd-orchestrator.generate` based on the spec's technology domains and roles.
 
-* backend-agent
-* database-agent
-* infra-agent
-* security-agent
-* qa-agent
-* reviewer-agent
+The orchestrator does not own any domain-role agents. Common examples of what `generate`
+produces (names vary per project):
 
-Additional agents may be added later.
+* `backend-engineer` / `Jorge`
+* `database-engineer` / `Ana`
+* `qa-engineer` / `Carlos`
+* `infra-engineer`
+* `security-engineer`
+
+The full agent roster is always project-specific. Inspect `.squad/agents/` for the actual
+agents active in a given project. To add a new agent, update the spec and re-run
+`/speckit.sdd-orchestrator.generate`.
 
 ---
 
@@ -557,22 +562,16 @@ Implementation without tests is forbidden.
 
 Agents must delegate work whenever specialization is beneficial.
 
-Examples:
+Squad agents may spawn other Squad agents when a task requires a different domain.
+The orchestrator does not define these delegation paths — Squad agents are responsible
+for recognizing when work falls outside their scope and delegating accordingly.
 
-Backend Agent
-→ Database Agent
+Examples (using generic role names — actual agent names are project-specific):
 
-Backend Agent
-→ Security Agent
-
-Backend Agent
-→ QA Agent
-
-Infra Agent
-→ Security Agent
-
-Reviewer Agent
-→ QA Agent
+Backend agent needs a migration → delegates to the database agent
+Backend agent adds auth → delegates to the security agent
+Any agent needs tests → delegates to the QA agent
+Infra agent touches auth config → delegates to the security agent
 
 Large tasks must be decomposed into specialized work.
 

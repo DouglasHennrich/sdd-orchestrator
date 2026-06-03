@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.6.0] - 2026-06-03
+
+### Changed
+
+- **Routing now uses exclusively real Squad agents — domain agent templates removed.**
+  The `route` and `after-tasks` commands previously had a hardcoded fallback table mapping
+  domain keywords to `speckit.sdd-orchestrator.backend`, `.database`, `.security`, `.qa`,
+  `.infra`, and `.reviewer`. This caused tasks to be routed to sdd-orchestrator's internal
+  agent names instead of the actual Squad agents defined in `.squad/agents/` (e.g. `Jorge`,
+  `backend-engineer`). The fallback table has been removed entirely.
+
+- **`route.md` and `after-tasks.md`**: routing now reads exclusively from `.squad/agents/`
+  active agents and `.squad/routing.md`. If no Squad agent covers a task, the command flags
+  it with `⚠️ no agent match` and instructs the user to run
+  `/speckit.sdd-orchestrator.generate` so a new Squad agent is created before retrying.
+  A new prerequisite check ensures at least one active Squad agent exists before routing
+  begins.
+
+- **`orchestrate-implement.md`**: removed reference to "specialist execution agents
+  (backend, database, security, qa, infra, reviewer)" — execution is now dispatched to
+  whatever Squad agents are annotated in `tasks.md`.
+
+### Removed
+
+- **6 domain-role agent templates** that modelled Squad roles inside the orchestrator:
+  `speckit.sdd-orchestrator.backend.agent.md`, `.database.agent.md`, `.security.agent.md`,
+  `.qa.agent.md`, `.infra.agent.md`, `.reviewer.agent.md`. These were incorrect — domain
+  agents belong to the Squad team (generated per-project by `generate`), not to the
+  orchestrator itself. The remaining orchestrator-owned agents (`route`, `specify`,
+  `discovery`, `codebase-index`, `codebase-architect`, `implement`, `tasks-auditor`) are
+  process agents and are unaffected.
+
 ## [1.5.0] - 2026-06-02
 
 ### Added
