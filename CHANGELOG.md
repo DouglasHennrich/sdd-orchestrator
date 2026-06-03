@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.7.0] - 2026-06-03
+
+### Added
+
+- **Monorepo scope branch naming.** The `sdd-orchestrator.init` script now patches three
+  project files to produce scope-aware branch names like `007-front-add-login` instead of
+  `007-add-login`:
+  - **`create-new-feature.sh`** gains a `--scope` flag. When provided, the scope value is
+    prepended to the branch suffix: `NNN-{scope}-feature-name`. The flag is optional —
+    omitting it preserves existing behavior.
+  - **`speckit.git.feature.agent.md`** (project copy) is updated to forward `--scope <value>`
+    to the bash script when it is present in `$ARGUMENTS`.
+  - **`speckit.git.validate.agent.md`** (project copy) is updated to accept the new
+    `NNN-(scope)-name` pattern alongside the legacy `NNN-name` pattern for backward
+    compatibility. Valid scope values: `monorepo`, `backoffice`, `front`, `mobile`,
+    `backoffice-front`, `backoffice-mobile`, `front-mobile`.
+  - All three patches are **idempotent** — re-running `speckit.sdd-orchestrator.init` after
+    they are already applied skips them with a `[sdd-orchestrator] ... skipping.` message.
+
+- **Scope inference in the specify agent.** `speckit.sdd-orchestrator.specify` now performs
+  a **Scope Inference** step at the end of Phase 0, after architecture analysis. It maps
+  which workspace packages (`backoffice`, `front`, `mobile`) will be touched to a
+  `FEATURE_SCOPE` value using the priority table above, logs the result, and carries the
+  value forward into the `before_specify` hook so the git feature command is invoked as
+  `EXECUTE_COMMAND: speckit.git.feature --scope {FEATURE_SCOPE} {feature-short-name}`.
+
 ## [1.6.0] - 2026-06-03
 
 ### Changed

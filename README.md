@@ -32,7 +32,7 @@ specify extension add --dev /path/to/sdd-orchestrator
 For published releases, install from the release archive URL:
 
 ```bash
-specify extension add sdd-orchestrator --from https://github.com/DouglasHennrich/sdd-orchestrator/archive/refs/tags/v1.6.0.zip
+specify extension add sdd-orchestrator --from https://github.com/DouglasHennrich/sdd-orchestrator/archive/refs/tags/v1.7.0.zip
 ```
 
 ## Usage
