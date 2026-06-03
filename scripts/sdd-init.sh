@@ -267,4 +267,56 @@ PYEOF
   echo "[sdd-orchestrator] Scope patch applied to speckit.git.feature.agent.md."
 fi
 
+# ── Monorepo scope patch: speckit.git.validate.agent.md ─────────────────────
+VALIDATE_AGENT="$PROJECT_ROOT/.github/agents/speckit.git.validate.agent.md"
+
+if [[ ! -f "$VALIDATE_AGENT" ]]; then
+  echo "ERROR: $VALIDATE_AGENT not found."
+  echo "The sdd-orchestrator monorepo scope feature requires the spec-kit git extension."
+  echo "Install it with: speckit extension add git"
+  echo "Then re-run: speckit sdd-orchestrator.init"
+  exit 1
+fi
+
+if grep -q "SDD-ORCHESTRATOR-SCOPE-PATCH" "$VALIDATE_AGENT"; then
+  echo "[sdd-orchestrator] Scope patch already applied to speckit.git.validate.agent.md; skipping."
+else
+  python3 - "$VALIDATE_AGENT" <<'PYEOF'
+import sys
+
+path = sys.argv[1]
+with open(path, 'r') as f:
+    content = f.read()
+
+# Add idempotency marker after frontmatter
+content = content.replace(
+    '---\ndescription: Validate current branch follows feature branch naming conventions\n---',
+    '---\ndescription: Validate current branch follows feature branch naming conventions\n---\n<!-- SDD-ORCHESTRATOR-SCOPE-PATCH -->'
+)
+
+# Update the sequential pattern description and example
+content = content.replace(
+    '1. **Sequential**: `^[0-9]{3,}-` (e.g., `001-feature-name`, `042-fix-bug`, `1000-big-feature`)',
+    '1. **Sequential**: `^[0-9]{3,}-(monorepo|backoffice|front|mobile|backoffice-front|backoffice-mobile|front-mobile)-` (e.g., `007-front-add-login`, `008-monorepo-upgrade-deps`, `009-backoffice-front-tokens`)\n   Also accepts the legacy pattern `^[0-9]{3,}-` for branches created before the monorepo scope convention.'
+)
+
+# Update the spec directory lookup note to clarify prefix is numeric only
+content = content.replace(
+    '  - For sequential branches, look for `specs/<prefix>-*` where prefix matches the numeric portion',
+    '  - For sequential branches, look for `specs/<prefix>-*` where prefix matches the numeric portion (e.g., `007` — not `007-front`)'
+)
+
+# Update the "not on a feature branch" hint to show new examples
+content = content.replace(
+    '- Output: `Feature branches should be named like: 001-feature-name or 20260319-143022-feature-name`',
+    '- Output: `Feature branches should be named like: 007-front-add-login, 008-monorepo-upgrade-deps, or 20260319-143022-feature-name`'
+)
+
+with open(path, 'w') as f:
+    f.write(content)
+PYEOF
+
+  echo "[sdd-orchestrator] Scope patch applied to speckit.git.validate.agent.md."
+fi
+
 echo "SDD Orchestrator initialization complete."
