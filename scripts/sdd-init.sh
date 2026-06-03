@@ -212,4 +212,59 @@ PYEOF
   echo "[sdd-orchestrator] Scope patch applied to create-new-feature.sh."
 fi
 
+# ── Monorepo scope patch: speckit.git.feature.agent.md ──────────────────────
+FEATURE_AGENT="$PROJECT_ROOT/.github/agents/speckit.git.feature.agent.md"
+
+if [[ ! -f "$FEATURE_AGENT" ]]; then
+  echo "ERROR: $FEATURE_AGENT not found."
+  echo "The sdd-orchestrator monorepo scope feature requires the spec-kit git extension."
+  echo "Install it with: speckit extension add git"
+  echo "Then re-run: speckit sdd-orchestrator.init"
+  exit 1
+fi
+
+if grep -q "SDD-ORCHESTRATOR-SCOPE-PATCH" "$FEATURE_AGENT"; then
+  echo "[sdd-orchestrator] Scope patch already applied to speckit.git.feature.agent.md; skipping."
+else
+  # Insert the scope-forwarding instruction into the Execution section.
+  # We add it after the line "- Preserve technical terms and acronyms (OAuth2, API, JWT, etc.)"
+  python3 - "$FEATURE_AGENT" <<'PYEOF'
+import sys
+
+path = sys.argv[1]
+with open(path, 'r') as f:
+    content = f.read()
+
+# Add idempotency marker to frontmatter
+content = content.replace(
+    '---\ndescription: Create a feature branch with sequential or timestamp numbering\n---',
+    '---\ndescription: Create a feature branch with sequential or timestamp numbering\n# SDD-ORCHESTRATOR-SCOPE-PATCH\n---'
+)
+
+# Add scope-forwarding instruction in the Execution section
+scope_instruction = (
+    '\n\nIf `--scope <value>` is present in `$ARGUMENTS`, extract it and pass it to '
+    'the script as `--scope <value>` alongside `--short-name`. '
+    'Example: `--scope front` produces a branch like `007-front-add-login`.'
+)
+anchor = '- Preserve technical terms and acronyms (OAuth2, API, JWT, etc.)'
+content = content.replace(anchor, anchor + scope_instruction)
+
+# Update the Bash example lines to show --scope usage
+content = content.replace(
+    '- **Bash**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --short-name "<short-name>" "<feature description>"`',
+    '- **Bash**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --short-name "<short-name>" --scope "<scope>" "<feature description>"`'
+)
+content = content.replace(
+    '- **Bash (timestamp)**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --timestamp --short-name "<short-name>" "<feature description>"`',
+    '- **Bash (timestamp)**: `.specify/extensions/git/scripts/bash/create-new-feature.sh --json --timestamp --short-name "<short-name>" --scope "<scope>" "<feature description>"`'
+)
+
+with open(path, 'w') as f:
+    f.write(content)
+PYEOF
+
+  echo "[sdd-orchestrator] Scope patch applied to speckit.git.feature.agent.md."
+fi
+
 echo "SDD Orchestrator initialization complete."
